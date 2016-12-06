@@ -19,12 +19,12 @@ module.exports = function transformer(file, api) {
 
   function getAllBefore(memberName, value) {
     let rest = value;
-    const checkMemberName = (typeof memberName === 'function') ? memberName : (name => name === memberName);
-    while(rest.type === j.MemberExpression.name && !checkMemberName(rest.property.name)) {
+    const equalsMemberName = (typeof memberName === 'function') ? memberName : (name => name === memberName);
+    while(rest.type === j.MemberExpression.name && !equalsMemberName(rest.property.name)) {
       rest = rest.object;
     }
 
-    if (checkMemberName(rest.property.name)) {
+    if (equalsMemberName(rest.property.name)) {
       rest = rest.object;
     }
     return rest;
@@ -54,7 +54,7 @@ module.exports = function transformer(file, api) {
     }
   }
 
-  const jasmineSpys = j(file.source)
+  let body = j(file.source)
     .find(j.CallExpression, {
       callee: {
         type: j.MemberExpression.name,
@@ -78,7 +78,7 @@ module.exports = function transformer(file, api) {
       return p;
     }).toSource();
 
-  const props = j(jasmineSpys)
+  body = j(body)
     .find(j.MemberExpression, {
       property: {
         name: name => properties.indexOf(name) !== -1
@@ -103,7 +103,7 @@ module.exports = function transformer(file, api) {
       return p;
     }).toSource();
 
-  return j(props)
+  return j(body)
     .find(j.CallExpression, {
       callee: {
         type: j.MemberExpression.name,
