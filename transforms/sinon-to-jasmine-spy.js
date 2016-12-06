@@ -20,7 +20,7 @@ module.exports = function transformer(file, api) {
   function getAllBefore(memberName, value) {
     let rest = value;
     const equalsMemberName = (typeof memberName === 'function') ? memberName : (name => name === memberName);
-    while(rest.type === j.MemberExpression.name && !equalsMemberName(rest.property.name)) {
+    while (rest.type === j.MemberExpression.name && !equalsMemberName(rest.property.name)) {
       rest = rest.object;
     }
 
@@ -31,7 +31,7 @@ module.exports = function transformer(file, api) {
   }
 
   function addMatcher(node) {
-    switch(node.type) {
+    switch (node.type) {
       case j.RegExpLiteral.name:
       case j.StringLiteral.name:
         return j.callExpression(
@@ -66,7 +66,7 @@ module.exports = function transformer(file, api) {
         }
       }
     })
-    .replaceWith(p => {
+    .replaceWith((p) => {
       if (p.value.arguments.length === 0) {
         return j.callExpression(
           j.memberExpression(
@@ -86,10 +86,10 @@ module.exports = function transformer(file, api) {
       object: {
         type: j.MemberExpression.name
       }
-    }).replaceWith(p => {
+    }).replaceWith((p) => {
       const rest = getAllBefore('have', p.value);
 
-      switch(p.value.property.name) {
+      switch (p.value.property.name) {
         case 'called':
           return createCall('toHaveBeenCalled', [], rest);
         case 'calledOnce':
@@ -98,9 +98,9 @@ module.exports = function transformer(file, api) {
           return createCall('toHaveBeenCalledTimes', [j.numericLiteral(2)], rest);
         case 'calledThrice':
           return createCall('toHaveBeenCalledTimes', [j.numericLiteral(3)], rest);
+        default:
+          return p;
       }
-
-      return p;
     }).toSource();
 
   return j(body)
@@ -112,10 +112,10 @@ module.exports = function transformer(file, api) {
         }
       }
     })
-    .replaceWith(p => {
+    .replaceWith((p) => {
       const rest = getAllBefore(name => ['have', 'always'].indexOf(name) !== -1, p.value.callee);
 
-      switch(p.value.callee.property.name) {
+      switch (p.value.callee.property.name) {
         case 'callCount':
           return createCall('toHaveBeenCalledTimes', p.value.arguments, rest);
         case 'calledWith':
@@ -124,9 +124,9 @@ module.exports = function transformer(file, api) {
           return createCall('toHaveBeenCalledWith', p.value.arguments, rest);
         case 'calledWithMatch':
           return createCall('toHaveBeenCalledWith', p.value.arguments.map(addMatcher), rest);
+        default:
+          return p;
       }
-
-      return p;
     }).toSource();
 };
 

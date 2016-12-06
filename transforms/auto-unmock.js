@@ -8,7 +8,7 @@ module.exports = function transformer(file, api) {
   // Find imports
   j(file.source)
     .find(j.ImportDeclaration)
-    .forEach(p => {
+    .forEach((p) => {
       files[p.value.source.value] = true;
     });
 
@@ -19,7 +19,7 @@ module.exports = function transformer(file, api) {
         name: 'require'
       }
     })
-    .forEach(p => {
+    .forEach((p) => {
       files[p.value.arguments[0].value] = true;
     });
 
@@ -36,7 +36,7 @@ module.exports = function transformer(file, api) {
         }
       }
     })
-    .forEach(p => {
+    .forEach((p) => {
       delete files[p.value.arguments[0].value];
     });
 
@@ -44,8 +44,8 @@ module.exports = function transformer(file, api) {
 
   Object.keys(files)
     .filter(path => IGNORE_INCLUDES.indexOf(path) === -1)
-    .forEach(path => {
-      unmock.push(`jest.unmock('${path}');`)
+    .forEach((path) => {
+      unmock.push(`jest.unmock('${path}');`);
     });
 
   return `${unmock.join('\n')}

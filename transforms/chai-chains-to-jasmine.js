@@ -1,34 +1,3 @@
-/**
- * const isExpectCall = (node) => node.name === 'expect' ||
- node.type === j.MemberExpression.name &&
- isExpectCall(node.object) ||
- node.type === j.CallExpression.name &&
- isExpectCall(node.callee);
-
- return j(body)
- .find(j.MemberExpression, {
-        property: {
-          name: name => ['exist', 'equal', 'Throw'].indexOf(name) >= 0,
-        },
-        object: isExpectCall
-      })
- .forEach(p => {
-        switch (p.value.property.name) {
-          case 'exist':
-            p.value.property.name = 'toBeDefined';
-            break;
-          case 'equal':
-            p.value.property.name = 'toEqual';
-            break;
-          case 'Throw':
-          case 'throw':
-            p.value.property.name = 'toThrow';
-            break;
-        }
-      })
- .toSource();
- * @type {[*]}
- */
 // not implemented ownPropertyDescriptor
 
 // keys, a, an, instanceof, property, ownProperty, lengthOf, respondTo
@@ -42,14 +11,11 @@ const fns = ['equal', 'throw', 'include',
 
 const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist'];
 
-//const chain = ['to', 'be', 'been', 'is', 'that', 'which',
-//  'and', 'has', 'have', 'with', 'at', 'of', 'same'];
-
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
 
   function createCall(fn, args, rest, containsNot) {
-    let expression = containsNot ? j.memberExpression(rest, j.identifier('not')) : rest;
+    const expression = containsNot ? j.memberExpression(rest, j.identifier('not')) : rest;
 
     return j.memberExpression(
       expression,
@@ -102,12 +68,12 @@ module.exports = function transformer(file, api) {
           j.memberExpression(j.identifier('jasmine'), j.identifier('objectContaining')),
           [node]
         );
+      default:
+        return node;
     }
-
-    return node;
   }
 
-  let body = j(file.source)
+  const body = j(file.source)
     .find(j.MemberExpression, {
       property: {
         name: name => members.indexOf(name) !== -1
@@ -115,7 +81,7 @@ module.exports = function transformer(file, api) {
       object: {
         type: j.MemberExpression.name
       }
-    }).replaceWith(p => {
+    }).replaceWith((p) => {
       const rest = getAllBefore('to', p.value);
       const containsNot = chainContains('not', p.value, 'to');
 
@@ -138,9 +104,9 @@ module.exports = function transformer(file, api) {
             ),
             []
           )], rest, containsNot);
+        default:
+          return p;
       }
-
-      return p;
     })
     .toSource();
 
@@ -153,7 +119,7 @@ module.exports = function transformer(file, api) {
         }
       }
     })
-    .replaceWith(p => {
+    .replaceWith((p) => {
       const isPrefix = (name => (['to', 'with', 'that'].indexOf(name) !== -1));
       const rest = getAllBefore(isPrefix, p.value.callee, 'should');
       const containsNot = chainContains('not', p.value.callee, isPrefix);
@@ -183,9 +149,9 @@ module.exports = function transformer(file, api) {
           return createCall('toMatch', p.value.arguments, rest, containsNot);
         case 'members':
           return createCall('toEqual', p.value.arguments.map(containing), rest, containsNot);
+        default:
+          return p;
       }
-
-      return p;
     })
     .toSource();
 };
