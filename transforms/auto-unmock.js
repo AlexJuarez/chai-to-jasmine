@@ -52,3 +52,5 @@ module.exports = function transformer(file, api) {
 
 ${file.source}`;
 };
+
+module.exports.parser = 'babylon';
