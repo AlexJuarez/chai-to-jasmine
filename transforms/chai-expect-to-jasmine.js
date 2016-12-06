@@ -13,8 +13,9 @@ module.exports = function transformer(file, api) {
   function getExpectCall(node) {
     let curr = node;
 
-    while ((curr.type === j.MemberExpression.name || curr.type === j.CallExpression.name) &&
-      curr.callee.name !== 'expect') {
+    while ((curr.type === j.MemberExpression.name || curr.type === j.CallExpression.name &&
+      curr.callee.name !== 'expect'
+    )) {
       if (curr.type === j.MemberExpression.name) {
         curr = curr.object;
       } else if (curr.type === j.CallExpression.name) {
@@ -89,14 +90,13 @@ module.exports = function transformer(file, api) {
           if (args[0].type === j.StringLiteral.name) {
             return createCall('toBe', args,
               updateExpect(expectCall, node => j.unaryExpression('typeof', node)), containsNot);
-          } else {
-            return createCall('toBe', [],
-              updateExpect(expectCall, node => j.binaryExpression('instanceof', node, args[0])),
-              containsNot
-            );
           }
+          return createCall('toBe', [j.booleanLiteral(true)],
+            updateExpect(expectCall, node => j.binaryExpression('instanceof', node, args[0])),
+            containsNot
+          );
         case 'instanceof':
-          return createCall('toBe', [],
+          return createCall('toBe', [j.booleanLiteral(true)],
             updateExpect(expectCall, node => j.binaryExpression('instanceof', node, args[0])),
             containsNot
           );
@@ -108,7 +108,8 @@ module.exports = function transformer(file, api) {
         default:
           return p;
       }
-    });
+    })
+    .toSource();
 };
 
 module.exports.parser = 'babylon';

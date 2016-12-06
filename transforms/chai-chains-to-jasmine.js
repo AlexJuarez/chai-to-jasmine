@@ -89,9 +89,9 @@ module.exports = function transformer(file, api) {
         case 'ok':
           return createCall('toBeTruthy', [], rest, containsNot);
         case 'true':
-          return createCall('toEqual', [j.booleanLiteral(true)], rest, containsNot);
+          return createCall('toBe', [j.booleanLiteral(true)], rest, containsNot);
         case 'false':
-          return createCall('toEqual', [j.booleanLiteral(false)], rest, containsNot);
+          return createCall('toBe', [j.booleanLiteral(false)], rest, containsNot);
         case 'null':
           return createCall('toBeNull', [], rest, containsNot);
         case 'undefined':
