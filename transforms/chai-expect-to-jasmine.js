@@ -54,6 +54,19 @@ module.exports = function transformer(file, api) {
     return curr.type === j.MemberExpression.name && curr.property.name === fn;
   }
 
+  function parseArgs(args) {
+    if (args.length === 1 && args[0].type === j.ObjectExpression.name) {
+      return [j.callExpression(
+        j.memberExpression(j.identifier('Object'), j.identifier('keys')),
+        args
+      )];
+    } else if (args.length > 1) {
+      return [j.arrayExpression(args)];
+    }
+
+    return args;
+  }
+
   return j(file.source)
     .find(j.CallExpression.name, {
       callee: {
@@ -76,7 +89,7 @@ module.exports = function transformer(file, api) {
           return createCall('toEqual', [
             j.callExpression(
               j.memberExpression(j.identifier('jasmine'), j.identifier('arrayContaining')),
-              args
+              parseArgs(args)
             )
           ], updateExpect(expectCall, node => j.callExpression(
             j.memberExpression(j.identifier('Object'), j.identifier('keys')),
@@ -101,7 +114,7 @@ module.exports = function transformer(file, api) {
             containsNot
           );
         case 'lengthOf':
-          return createCall('toBe', [],
+          return createCall('toBe', args,
             updateExpect(expectCall, node => j.memberExpression(node, j.identifier('length'))),
             containsNot
           );
