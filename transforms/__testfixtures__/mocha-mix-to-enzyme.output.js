@@ -63,7 +63,7 @@ describe('SingleSelect', () => {
 
   function getContainerComponent() {
     const dropdown = getDropdownComponent();
-    return dropdown.props('content');
+    return dropdown.prop('content');
   }
 
   function getTextFieldComponent() {
@@ -82,11 +82,11 @@ describe('SingleSelect', () => {
     });
 
     it('should inherit id prop', () => {
-      expect(dropdown.props('id')).toBe(STANDARD_PROPS.id);
+      expect(dropdown.prop('id')).toBe(STANDARD_PROPS.id);
     });
 
     it('should map open prop to visible prop', () => {
-      expect(dropdown.props('visible')).toBe(STANDARD_PROPS.open);
+      expect(dropdown.prop('visible')).toBe(STANDARD_PROPS.open);
     });
 
     it('should render anchor component within container, if provided', () => {
@@ -124,17 +124,17 @@ describe('SingleSelect', () => {
     });
 
     it('should generate ID', () => {
-      expect(textField.props('id')).toBe(`${STANDARD_PROPS.id}-input`);
+      expect(textField.prop('id')).toBe(`${STANDARD_PROPS.id}-input`);
     });
 
     it(`should pass ${TEXT_FIELD_INHERITED_PROPS.join(', ')} props straight through`, () => {
       TEXT_FIELD_INHERITED_PROPS.forEach(name => {
-        expect(textField.props('name')).toBe(STANDARD_PROPS[name]);
+        expect(textField.prop(name)).toBe(STANDARD_PROPS[name]);
       });
     });
 
     it('should set the placeholder correctly', () => {
-      expect(textField.props('placeholder')).toBe(PLACEHOLDER);
+      expect(textField.prop('placeholder')).toBe(PLACEHOLDER);
     });
 
     it('should call onFocus on text field focus or click', () => {
@@ -210,16 +210,16 @@ describe('SingleSelect', () => {
     });
 
     it('should generate ID', () => {
-      expect(itemList.props('id')).toBe(`${STANDARD_PROPS.id}-items`);
+      expect(itemList.prop('id')).toBe(`${STANDARD_PROPS.id}-items`);
     });
 
     it('should pass items collection to SelectableItemList descendant', () => {
-      expect(itemList.props('items')).toEqual(ITEMS);
+      expect(itemList.prop('items')).toEqual(ITEMS);
     });
 
     it('it should properly pass the selected value', () => {
-      expect(itemList.props('selectedValues').length).toBe(1);
-      expect(itemList.props('selectedValues')[0]).toBe(STANDARD_PROPS.value);
+      expect(itemList.prop('selectedValues').length).toBe(1);
+      expect(itemList.prop('selectedValues')[0]).toBe(STANDARD_PROPS.value);
     });
 
     describe('Clicking item in list', () => {

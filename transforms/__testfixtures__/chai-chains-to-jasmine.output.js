@@ -22,9 +22,9 @@ expect(undefined).toBeUndefined();
 expect(null).toBeDefined();
 
 // exist
-expect(foo).toEqual(jasmine.anything());
-expect(bar).not.toEqual(jasmine.anything());
-expect(baz).not.toEqual(jasmine.anything());
+expect(foo.length).toBeTruthy();
+expect(bar.length).toBeFalsy();
+expect(baz.length).toBeFalsy();
 
 // equal
 expect('hello').toBe('hello');

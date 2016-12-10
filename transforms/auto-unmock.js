@@ -1,4 +1,4 @@
-const IGNORE_INCLUDES = ['react', 'mocha-mix'];
+const IGNORE_INCLUDES = ['react', 'mocha-mix', 'enzyme', 'radium'];
 
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;

@@ -25,6 +25,27 @@ module.exports = function transformer(file, api) {
       ));
   }
 
+  function getExpectCall(node) {
+    let curr = node;
+
+    while (curr.type === j.MemberExpression.name ||
+    (curr.type === j.CallExpression.name && curr.callee.name !== 'expect')) {
+      if (curr.type === j.MemberExpression.name) {
+        curr = curr.object;
+      } else if (curr.type === j.CallExpression.name) {
+        curr = curr.callee;
+      }
+    }
+
+    return curr;
+  }
+
+  function updateExpect(node, fn) {
+    const args = getExpectCall(node).arguments.map(fn);
+
+    return j.callExpression(j.identifier('expect'), args);
+  }
+
   function chainContains(fn, value, end) {
     let curr = value;
     const checkEnd = (typeof end === 'function') ? end : name => name === end;
@@ -98,16 +119,16 @@ module.exports = function transformer(file, api) {
           return createCall('toBeNull', [], rest, containsNot);
         case 'undefined':
           return containsNot ?
-            createCall('toBeDefined', [], rest):
+            createCall('toBeDefined', [], rest) :
             createCall('toBeUndefined', [], rest);
         case 'exist':
-          return createCall('toEqual', [j.callExpression(
-            j.memberExpression(
-              j.identifier('jasmine'),
-              j.identifier('anything')
-            ),
-            []
-          )], rest, containsNot);
+          return containsNot ?
+            createCall('toBeFalsy', [],
+              updateExpect(rest, node => j.memberExpression(node, j.identifier('length')))
+              ) :
+            createCall('toBeTruthy', [],
+              updateExpect(rest, node => j.memberExpression(node, j.identifier('length')))
+            );
         default:
           return p;
       }

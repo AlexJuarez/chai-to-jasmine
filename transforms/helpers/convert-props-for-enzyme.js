@@ -47,8 +47,8 @@ module.exports = (j, source) => {
       }
     })
     .replaceWith(p => j.callExpression(
-      j.memberExpression(p.value.object.object, j.identifier('props')),
-      [j.stringLiteral(p.value.property.name)]
+      j.memberExpression(p.value.object.object, j.identifier('prop')),
+      [p.value.computed ? p.value.property : j.stringLiteral(p.value.property.name)]
     ))
     .toSource({ quote: 'single' });
 };

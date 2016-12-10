@@ -8,13 +8,28 @@ const fns = ['callCount', 'calledWith', 'calledWithExactly', 'calledWithMatch'];
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
 
-  function createCall(fn, args, rest) {
+  function createCall(fn, args, rest, containsNot) {
+    const expression = containsNot ? j.memberExpression(rest, j.identifier('not')) : rest;
+
     return j.memberExpression(
-      rest,
+      expression,
       j.callExpression(
         j.identifier(fn),
         args
       ));
+  }
+
+  function chainContains(fn, value, end) {
+    let curr = value;
+    const checkEnd = (typeof end === 'function') ? end : name => name === end;
+
+    while (curr.type === j.MemberExpression.name
+    && curr.property.name !== fn
+    && !checkEnd(curr.property.name)) {
+      curr = curr.object;
+    }
+
+    return curr.type === j.MemberExpression.name && curr.property.name === fn;
   }
 
   function getAllBefore(memberName, value) {
@@ -88,16 +103,17 @@ module.exports = function transformer(file, api) {
       }
     }).replaceWith((p) => {
       const rest = getAllBefore('have', p.value);
+      const containsNot = chainContains('not', p.value, 'have');
 
       switch (p.value.property.name) {
         case 'called':
-          return createCall('toHaveBeenCalled', [], rest);
+          return createCall('toHaveBeenCalled', [], rest, containsNot);
         case 'calledOnce':
-          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(1)], rest);
+          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(1)], rest, containsNot);
         case 'calledTwice':
-          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(2)], rest);
+          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(2)], rest, containsNot);
         case 'calledThrice':
-          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(3)], rest);
+          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(3)], rest, containsNot);
         default:
           return p;
       }
@@ -113,17 +129,20 @@ module.exports = function transformer(file, api) {
       }
     })
     .replaceWith((p) => {
-      const rest = getAllBefore(name => ['have', 'always'].indexOf(name) !== -1, p.value.callee);
+      const haveOrAlways = name => ['have', 'always'].indexOf(name) !== -1;
+      const rest = getAllBefore(haveOrAlways, p.value.callee);
+      const containsNot = chainContains('not', p.value, haveOrAlways);
 
       switch (p.value.callee.property.name) {
         case 'callCount':
-          return createCall('toHaveBeenCalledTimes', p.value.arguments, rest);
+          return createCall('toHaveBeenCalledTimes', p.value.arguments, rest, containsNot);
         case 'calledWith':
-          return createCall('toHaveBeenCalledWith', p.value.arguments, rest);
+          return createCall('toHaveBeenCalledWith', p.value.arguments, rest, containsNot);
         case 'calledWithExactly':
-          return createCall('toHaveBeenCalledWith', p.value.arguments, rest);
+          return createCall('toHaveBeenCalledWith', p.value.arguments, rest, containsNot);
         case 'calledWithMatch':
-          return createCall('toHaveBeenCalledWith', p.value.arguments.map(addMatcher), rest);
+          return createCall('toHaveBeenCalledWith',
+            p.value.arguments.map(addMatcher), rest, containsNot);
         default:
           return p;
       }
