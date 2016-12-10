@@ -87,7 +87,9 @@ module.exports = function transformer(file, api) {
 
       switch (p.value.property.name) {
         case 'ok':
-          return createCall('toBeTruthy', [], rest, containsNot);
+          return containsNot ?
+            createCall('toBeFalsy', [], rest) :
+            createCall('toBeTruthy', [], rest);
         case 'true':
           return createCall('toBe', [j.booleanLiteral(true)], rest, containsNot);
         case 'false':
@@ -95,7 +97,9 @@ module.exports = function transformer(file, api) {
         case 'null':
           return createCall('toBeNull', [], rest, containsNot);
         case 'undefined':
-          return createCall('toBeUndefined', [], rest, containsNot);
+          return containsNot ?
+            createCall('toBeDefined', [], rest):
+            createCall('toBeUndefined', [], rest);
         case 'exist':
           return createCall('toEqual', [j.callExpression(
             j.memberExpression(

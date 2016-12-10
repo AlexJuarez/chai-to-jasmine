@@ -1,17 +1,11 @@
+import { mount } from 'enzyme';
+import { TestMode } from 'radium';
+import SingleSelect from './_SingleSelect';
+import DropdownTargetBase from '../dropdowns/_DropdownTargetBase';
+import TextField from '../input-fields/TextField';
+TestMode.enable();
 import React from 'react';
 
-import MochaMix from 'mocha-mix';
-import {
-  elementQuerySelector,
-  expect,
-  sinon,
-  standardMocks,
-} from '../TestUtils';
-import { ReactTestUtils } from '../ReactUtils';
-const {
-  findRenderedComponentWithType,
-  renderIntoDocument,
-} = ReactTestUtils;
 import { NOOP } from '../base/Base';
 
 const PLACEHOLDER = 'Placeholder';
@@ -56,46 +50,29 @@ const STANDARD_PROPS = {
 };
 
 describe('SingleSelect', () => {
-  const mix = MochaMix.mix({
-    rootDir: __dirname,
-    import: './_SingleSelect',
-    mocks: {
-      ...standardMocks,
-    },
-  });
-
-  let DropdownTargetBase;
   let rendered;
-  let SingleSelect;
-  let TextField;
-
-  before(() => {
-    DropdownTargetBase = require('../dropdowns/_DropdownTargetBase');
-    TextField = require('../input-fields/TextField');
-  });
 
   beforeEach(() => {
-    SingleSelect = mix.import();
-    rendered = renderIntoDocument(<SingleSelect {...STANDARD_PROPS} />);
+    rendered = mount(<SingleSelect {...STANDARD_PROPS} />);
   });
 
   function getDropdownComponent() {
     // Throws error unless props.open === true
-    return findRenderedComponentWithType(rendered, DropdownTargetBase);
+    return rendered.find(DropdownTargetBase);
   }
 
   function getContainerComponent() {
     const dropdown = getDropdownComponent();
-    return dropdown.props.content;
+    return dropdown.props('content');
   }
 
   function getTextFieldComponent() {
-    return findRenderedComponentWithType(rendered, TextField);
+    return rendered.find(TextField);
   }
 
   function getSelectableItemList() {
     const txlContainer = getContainerComponent();
-    return txlContainer.props.children[0];
+    return txlContainer.childAt(0);
   }
 
   describe('Instantiating DropdownTargetBase', () => {
@@ -105,11 +82,11 @@ describe('SingleSelect', () => {
     });
 
     it('should inherit id prop', () => {
-      expect(dropdown.props.id).toBe(STANDARD_PROPS.id);
+      expect(dropdown.props('id')).toBe(STANDARD_PROPS.id);
     });
 
     it('should map open prop to visible prop', () => {
-      expect(dropdown.props.visible).toBe(STANDARD_PROPS.open);
+      expect(dropdown.props('visible')).toBe(STANDARD_PROPS.open);
     });
 
     it('should render anchor component within container, if provided', () => {
@@ -117,17 +94,17 @@ describe('SingleSelect', () => {
       const container = getContainerComponent();
 
       // this is admittedly brittle, but not sure how else to get to the rendered anchor component
-      const anchorComponentFromRendered = container.props.children[1].props.children;
+      const anchorComponentFromRendered = container.childAt(1).children();
 
       // Container children should be SelectableItemList and <div> w/ anchorComponent inside
       expect(anchorComponentFromRendered).toBe(anchorComponent);
 
       // render w/o anchorComponent
-      rendered = renderIntoDocument(<SingleSelect {...PROPS_WITHOUT_ANCHOR} />);
+      rendered = mount(<SingleSelect {...PROPS_WITHOUT_ANCHOR} />);
       const containerWithoutAnchor = getContainerComponent();
 
       // the {!!anchorComponent && ...} guard statement explicitly casts to false
-      expect(containerWithoutAnchor.props.children[1]).toBe(false);
+      expect(containerWithoutAnchor.childAt(1)).toBe(false);
     });
   });
 
@@ -138,8 +115,8 @@ describe('SingleSelect', () => {
       'secondaryText',
       'validationState',
     ];
-    const DOWN_ARROW_SELECTOR = '[data-component=TxlIconArrowDown]';
-    const UP_ARROW_SELECTOR = '[data-component=TxlIconArrowUp]';
+    const DOWN_ARROW_SELECTOR = '[data-component="TxlIconArrowDown"]';
+    const UP_ARROW_SELECTOR = '[data-component="TxlIconArrowUp"]';
     let textField;
 
     beforeEach(() => {
@@ -147,17 +124,17 @@ describe('SingleSelect', () => {
     });
 
     it('should generate ID', () => {
-      expect(textField.props.id).toBe(`${STANDARD_PROPS.id}-input`);
+      expect(textField.props('id')).toBe(`${STANDARD_PROPS.id}-input`);
     });
 
     it(`should pass ${TEXT_FIELD_INHERITED_PROPS.join(', ')} props straight through`, () => {
       TEXT_FIELD_INHERITED_PROPS.forEach(name => {
-        expect(textField.props[name]).toBe(STANDARD_PROPS[name]);
+        expect(textField.props('name')).toBe(STANDARD_PROPS[name]);
       });
     });
 
     it('should set the placeholder correctly', () => {
-      expect(textField.props.placeholder).toBe(PLACEHOLDER);
+      expect(textField.props('placeholder')).toBe(PLACEHOLDER);
     });
 
     it('should call onFocus on text field focus or click', () => {
@@ -165,10 +142,10 @@ describe('SingleSelect', () => {
       // TextField.onClick={this._handleTextFieldFocus}
       const onFocusSpy = jasmine.createSpy();
       const elemSelectSpy = jasmine.createSpy();
-      rendered = renderIntoDocument(<SingleSelect {...STANDARD_PROPS} onFocus={onFocusSpy} />);
-      rendered._input.select = elemSelectSpy;
+      rendered = mount(<SingleSelect {...STANDARD_PROPS} onFocus={onFocusSpy} />);
+      rendered.instance()._input.select = elemSelectSpy;
 
-      rendered._handleTextFieldFocus();
+      rendered.instance()._handleTextFieldFocus();
       expect(elemSelectSpy).toHaveBeenCalledTimes(1);
       expect(onFocusSpy).toHaveBeenCalledTimes(1);
     });
@@ -178,8 +155,8 @@ describe('SingleSelect', () => {
       const onChangeSpy = jasmine.createSpy();
       const DUMMY_TEXT_FIELD_VAL = { value: ITEMS[2] };
 
-      rendered = renderIntoDocument(<SingleSelect {...STANDARD_PROPS} onChange={onChangeSpy} />);
-      rendered._handleTextFieldChange(DUMMY_TEXT_FIELD_VAL);
+      rendered = mount(<SingleSelect {...STANDARD_PROPS} onChange={onChangeSpy} />);
+      rendered.instance()._handleTextFieldChange(DUMMY_TEXT_FIELD_VAL);
 
       expect(onChangeSpy).toHaveBeenCalledTimes(1);
       expect(onChangeSpy).toHaveBeenCalledWith(DUMMY_TEXT_FIELD_VAL);
@@ -189,8 +166,8 @@ describe('SingleSelect', () => {
       // TextField.onBlur={this._handleTextFieldBlur}
       const onBlurSpy = jasmine.createSpy();
 
-      rendered = renderIntoDocument(<SingleSelect {...STANDARD_PROPS} onBlur={onBlurSpy} />);
-      rendered._handleTextFieldBlur();
+      rendered = mount(<SingleSelect {...STANDARD_PROPS} onBlur={onBlurSpy} />);
+      rendered.instance()._handleTextFieldBlur();
 
       expect(onBlurSpy).toHaveBeenCalledTimes(1);
     });
@@ -198,30 +175,30 @@ describe('SingleSelect', () => {
     it('should call not call onBlur on text field blur if blur is disabled', () => {
       const onBlurSpy = jasmine.createSpy();
 
-      rendered = renderIntoDocument(<SingleSelect {...STANDARD_PROPS} onBlur={onBlurSpy} />);
+      rendered = mount(<SingleSelect {...STANDARD_PROPS} onBlur={onBlurSpy} />);
       rendered.setState({ open: true });
-      rendered._disableBlur();
-      rendered._handleTextFieldBlur();
+      rendered.instance()._disableBlur();
+      rendered.instance()._handleTextFieldBlur();
 
       expect(onBlurSpy).not.toHaveBeenCalledTimes(1);
     });
 
     it('should render down arrow when dropdown is closed', () => {
       // dropdown closed, down arrow visible
-      expect(elementQuerySelector(rendered, DOWN_ARROW_SELECTOR)).toEqual(jasmine.anything());
-      expect(elementQuerySelector(rendered, UP_ARROW_SELECTOR)).not.toEqual(jasmine.anything());
+      expect(rendered.find(DOWN_ARROW_SELECTOR)).toEqual(jasmine.anything());
+      expect(rendered.find(UP_ARROW_SELECTOR)).not.toEqual(jasmine.anything());
     });
 
     it('should render up arrow when dropdown is open', () => {
       // dropdown open, up arrow visible
-      rendered = renderIntoDocument(
+      rendered = mount(
         <SingleSelect
-      {...STANDARD_PROPS}
-      open
-      />
+          {...STANDARD_PROPS}
+          open
+        />
       );
-      expect(elementQuerySelector(rendered, DOWN_ARROW_SELECTOR)).not.toEqual(jasmine.anything());
-      expect(elementQuerySelector(rendered, UP_ARROW_SELECTOR)).toEqual(jasmine.anything());
+      expect(rendered.find(DOWN_ARROW_SELECTOR)).not.toEqual(jasmine.anything());
+      expect(rendered.find(UP_ARROW_SELECTOR)).toEqual(jasmine.anything());
     });
   });
 
@@ -233,16 +210,16 @@ describe('SingleSelect', () => {
     });
 
     it('should generate ID', () => {
-      expect(itemList.props.id).toBe(`${STANDARD_PROPS.id}-items`);
+      expect(itemList.props('id')).toBe(`${STANDARD_PROPS.id}-items`);
     });
 
     it('should pass items collection to SelectableItemList descendant', () => {
-      expect(itemList.props.items).toEqual(ITEMS);
+      expect(itemList.props('items')).toEqual(ITEMS);
     });
 
     it('it should properly pass the selected value', () => {
-      expect(itemList.props.selectedValues.length).toBe(1);
-      expect(itemList.props.selectedValues[0]).toBe(STANDARD_PROPS.value);
+      expect(itemList.props('selectedValues').length).toBe(1);
+      expect(itemList.props('selectedValues')[0]).toBe(STANDARD_PROPS.value);
     });
 
     describe('Clicking item in list', () => {
@@ -252,51 +229,51 @@ describe('SingleSelect', () => {
       beforeEach(() => {
         onChangeSpy = jasmine.createSpy();
         onItemSelectSpy = jasmine.createSpy();
-        rendered = renderIntoDocument(
+        rendered = mount(
           <SingleSelect
-        {...STANDARD_PROPS}
-        onChange={onChangeSpy}
-        onItemSelect={onItemSelectSpy}
+            {...STANDARD_PROPS}
+            onChange={onChangeSpy}
+            onItemSelect={onItemSelectSpy}
           />);
       });
 
       it('should call onChange if noItemsMessage is undefined', () => {
-        rendered._handleItemClick({});
+        rendered.instance()._handleItemClick({});
         expect(onChangeSpy).toHaveBeenCalledTimes(1);
       });
 
       it('should call onChange if noItemsMessage is false', () => {
-        rendered._handleItemClick({ noItemsMessage: false });
+        rendered.instance()._handleItemClick({ noItemsMessage: false });
         expect(onChangeSpy).toHaveBeenCalledTimes(1);
       });
 
       it('should *not* call onChange if noItemsMessage is true', () => {
-        rendered._handleItemClick({ noItemsMessage: true });
+        rendered.instance()._handleItemClick({ noItemsMessage: true });
         expect(onChangeSpy).toHaveBeenCalled();
       });
 
       it('should *not* call onChange if noItemsMessage is truthy', () => {
-        rendered._handleItemClick({ noItemsMessage: 1 });
+        rendered.instance()._handleItemClick({ noItemsMessage: 1 });
         expect(onChangeSpy).toHaveBeenCalled();
       });
 
       it('should call onItemSelect if noItemsMessage is undefined', () => {
-        rendered._handleItemClick({});
+        rendered.instance()._handleItemClick({});
         expect(onItemSelectSpy).toHaveBeenCalledTimes(1);
       });
 
       it('should call onItemSelect if noItemsMessage is false', () => {
-        rendered._handleItemClick({ noItemsMessage: false });
+        rendered.instance()._handleItemClick({ noItemsMessage: false });
         expect(onItemSelectSpy).toHaveBeenCalledTimes(1);
       });
 
       it('should *not* call onItemSelect if noItemsMessage is true', () => {
-        rendered._handleItemClick({ noItemsMessage: true });
+        rendered.instance()._handleItemClick({ noItemsMessage: true });
         expect(onItemSelectSpy).toHaveBeenCalled();
       });
 
       it('should *not* call onItemSelect if noItemsMessage is truthy', () => {
-        rendered._handleItemClick({ noItemsMessage: 1 });
+        rendered.instance()._handleItemClick({ noItemsMessage: 1 });
         expect(onItemSelectSpy).toHaveBeenCalled();
       });
     });

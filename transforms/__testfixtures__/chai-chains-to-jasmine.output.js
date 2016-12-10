@@ -1,9 +1,9 @@
 // ok
 expect('everything').toBeTruthy();
 expect(1).toBeTruthy();
-expect(false).not.toBeTruthy();
-expect(undefined).not.toBeTruthy();
-expect(null).not.toBeTruthy();
+expect(false).toBeFalsy();
+expect(undefined).toBeFalsy();
+expect(null).toBeFalsy();
 
 // true
 expect(true).toBe(true);
@@ -19,7 +19,7 @@ expect(undefined).not.toBeNull();
 
 // undefined
 expect(undefined).toBeUndefined();
-expect(null).not.toBeUndefined();
+expect(null).toBeDefined();
 
 // exist
 expect(foo).toEqual(jasmine.anything());

@@ -13,9 +13,8 @@ module.exports = function transformer(file, api) {
   function getExpectCall(node) {
     let curr = node;
 
-    while ((curr.type === j.MemberExpression.name || curr.type === j.CallExpression.name &&
-      curr.callee.name !== 'expect'
-    )) {
+    while (curr.type === j.MemberExpression.name ||
+      (curr.type === j.CallExpression.name && curr.callee.name !== 'expect')) {
       if (curr.type === j.MemberExpression.name) {
         curr = curr.object;
       } else if (curr.type === j.CallExpression.name) {
@@ -91,10 +90,16 @@ module.exports = function transformer(file, api) {
               j.memberExpression(j.identifier('jasmine'), j.identifier('arrayContaining')),
               parseArgs(args)
             )
-          ], updateExpect(expectCall, node => j.callExpression(
-            j.memberExpression(j.identifier('Object'), j.identifier('keys')),
-            [node]
-          )), containsNot);
+          ], updateExpect(expectCall, (node) => {
+            if (node.type === j.ObjectExpression.name) {
+              return j.callExpression(
+                j.memberExpression(j.identifier('Object'), j.identifier('keys')),
+                [node]
+              );
+            }
+
+            return node;
+          }), containsNot);
         case 'a':
         case 'an':
           if (!args.length) {
