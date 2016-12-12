@@ -169,20 +169,20 @@ module.exports = function transformer(file, api) {
     .forEach((p) => {
       const statements = [];
       statements.push(createSpecificImport(['mount'], 'enzyme'));
-      statements.push(createSpecificImport(['TestMode'], 'radium'));
+      // statements.push(createSpecificImport(['TestMode'], 'radium'));
 
       Object.keys(imports).forEach((key) => {
         statements.push(createDefaultImport(key, imports[key]));
       });
 
-      statements.push(
+      /* statements.push(
         j.expressionStatement(
           j.callExpression(
             j.memberExpression(j.identifier('TestMode'), j.identifier('enable')),
             []
           )
         )
-      );
+      ); */
 
       p.value.body = statements.concat(p.value.body);
     })
