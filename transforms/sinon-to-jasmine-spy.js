@@ -7,6 +7,7 @@ const properties = ['called', 'calledOnce', 'calledTwice', 'calledThrice'];
 const fns = ['callCount', 'calledWith', 'calledWithExactly', 'calledWithMatch'];
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
+  const root = j(file.source);
 
   function createCall(fn, args, rest, containsNot) {
     const expression = containsNot ? j.memberExpression(rest, j.identifier('not')) : rest;
@@ -69,84 +70,86 @@ module.exports = function transformer(file, api) {
     }
   }
 
-  let body = j(file.source)
-    .find(j.CallExpression, {
-      callee: {
-        type: j.MemberExpression.name,
-        object: {
-          name: 'sinon'
-        },
-        property: {
-          name: 'spy'
-        }
-      }
-    })
-    .replaceWith((p) => {
-      if (p.value.arguments.length === 0) {
-        return j.callExpression(
-          j.memberExpression(
-            j.identifier('jasmine'), j.identifier('createSpy')
-          ),
-          []
-        );
-      }
-      return p;
-    }).toSource();
-
-  body = j(body)
-    .find(j.MemberExpression, {
-      property: {
-        name: name => properties.indexOf(name) !== -1
-      },
+  root
+  .find(j.CallExpression, {
+    callee: {
+      type: j.MemberExpression.name,
       object: {
-        type: j.MemberExpression.name
+        name: 'sinon'
+      },
+      property: {
+        name: 'spy'
       }
-    }).replaceWith((p) => {
-      const rest = getAllBefore('have', p.value);
-      const containsNot = chainContains('not', p.value, 'have');
+    }
+  })
+  .replaceWith((p) => {
+    if (p.value.arguments.length === 0) {
+      return j.callExpression(
+        j.memberExpression(
+          j.identifier('jasmine'), j.identifier('createSpy')
+        ),
+        []
+      );
+    }
+    return p;
+  });
 
-      switch (p.value.property.name) {
-        case 'called':
-          return createCall('toHaveBeenCalled', [], rest, containsNot);
-        case 'calledOnce':
-          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(1)], rest, containsNot);
-        case 'calledTwice':
-          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(2)], rest, containsNot);
-        case 'calledThrice':
-          return createCall('toHaveBeenCalledTimes', [j.numericLiteral(3)], rest, containsNot);
-        default:
-          return p;
-      }
-    }).toSource();
+  root
+  .find(j.MemberExpression, {
+    property: {
+      name: name => properties.indexOf(name) !== -1
+    },
+    object: {
+      type: j.MemberExpression.name
+    }
+  }).replaceWith((p) => {
+    const rest = getAllBefore('have', p.value);
+    const containsNot = chainContains('not', p.value, 'have');
 
-  return j(body)
-    .find(j.CallExpression, {
-      callee: {
-        type: j.MemberExpression.name,
-        property: {
-          name: name => fns.indexOf(name) !== -1
-        }
-      }
-    })
-    .replaceWith((p) => {
-      const haveOrAlways = name => ['have', 'always'].indexOf(name) !== -1;
-      const rest = getAllBefore(haveOrAlways, p.value.callee);
-      const containsNot = chainContains('not', p.value, haveOrAlways);
+    switch (p.value.property.name) {
+      case 'called':
+        return createCall('toHaveBeenCalled', [], rest, containsNot);
+      case 'calledOnce':
+        return createCall('toHaveBeenCalledTimes', [j.numericLiteral(1)], rest, containsNot);
+      case 'calledTwice':
+        return createCall('toHaveBeenCalledTimes', [j.numericLiteral(2)], rest, containsNot);
+      case 'calledThrice':
+        return createCall('toHaveBeenCalledTimes', [j.numericLiteral(3)], rest, containsNot);
+      default:
+        return p;
+    }
+  });
 
-      switch (p.value.callee.property.name) {
-        case 'callCount':
-          return createCall('toHaveBeenCalledTimes', p.value.arguments, rest, containsNot);
-        case 'calledWith':
-          return createCall('toHaveBeenCalledWith', p.value.arguments, rest, containsNot);
-        case 'calledWithExactly':
-          return createCall('toHaveBeenCalledWith', p.value.arguments, rest, containsNot);
-        case 'calledWithMatch':
-          return createCall('toHaveBeenCalledWith',
-            p.value.arguments.map(addMatcher), rest, containsNot);
-        default:
-          return p;
+  root
+  .find(j.CallExpression, {
+    callee: {
+      type: j.MemberExpression.name,
+      property: {
+        name: name => fns.indexOf(name) !== -1
       }
-    }).toSource();
+    }
+  })
+  .replaceWith((p) => {
+    const haveOrAlways = name => ['have', 'always'].indexOf(name) !== -1;
+    const rest = getAllBefore(haveOrAlways, p.value.callee);
+    const containsNot = chainContains('not', p.value, haveOrAlways);
+
+    switch (p.value.callee.property.name) {
+      case 'callCount':
+        return createCall('toHaveBeenCalledTimes', p.value.arguments, rest, containsNot);
+      case 'calledWith':
+        return createCall('toHaveBeenCalledWith', p.value.arguments, rest, containsNot);
+      case 'calledWithExactly':
+        return createCall('toHaveBeenCalledWith', p.value.arguments, rest, containsNot);
+      case 'calledWithMatch':
+        return createCall('toHaveBeenCalledWith',
+          p.value.arguments.map(addMatcher), rest, containsNot);
+      default:
+        return p;
+    }
+  });
+
+  return root.toSource();
 };
 
 module.exports.parser = 'babylon';

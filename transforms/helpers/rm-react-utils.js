@@ -1,21 +1,19 @@
-module.exports = function (j, source) {
-  const body = j(source)
-    .find(j.ImportDeclaration, {
-      source: {
-        value: value => value.indexOf('ReactUtils') !== -1 || value.indexOf('TestUtils') !== -1
-      }
-    })
-    .remove()
-    .toSource();
+module.exports = function (j, root) {
+  root
+  .find(j.ImportDeclaration, {
+    source: {
+      value: value => value.indexOf('ReactUtils') !== -1 || value.indexOf('TestUtils') !== -1
+    }
+  })
+  .remove();
 
-  return j(body)
-    .find(j.VariableDeclaration, {
-      declarations: [{
-        init: {
-          name: 'ReactTestUtils'
-        }
-      }]
-    })
-    .remove()
-    .toSource();
-}
+  root
+  .find(j.VariableDeclaration, {
+    declarations: [{
+      init: {
+        name: 'ReactTestUtils'
+      }
+    }]
+  })
+  .remove();
+};

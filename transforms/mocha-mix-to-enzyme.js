@@ -4,150 +4,135 @@ const wrapInteralCalls = require('./helpers/wrap-internal-calls-for-enzyme');
 
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
+  const root = j(file.source);
   let MochaMixVariable = 'MochaMix';
   const variables = {};
   const variablesToRemove = [];
   const imports = {};
 
   // locate and remove 'mocha-mix' import
-  let body = j(file.source)
-    .find(j.ImportDeclaration, {
-      source: {
-        value: 'mocha-mix'
-      }
-    })
-    .forEach((p) => {
-      MochaMixVariable = p.value.specifiers[0].local.name;
-      p.prune();
-    })
-    .toSource();
+  root.find(j.ImportDeclaration, {
+    source: {
+      value: 'mocha-mix'
+    }
+  })
+  .forEach((p) => {
+    MochaMixVariable = p.value.specifiers[0].local.name;
+    p.prune();
+  });
 
   /**
    * find components defined by MochaMix.mix
    * save the component name and import definition
    */
-  body = j(body)
-    .find(j.VariableDeclaration, {
-      declarations: [{
-        type: j.VariableDeclarator.name,
-        init: {
-          type: j.CallExpression.name,
-          callee: {
-            type: j.MemberExpression.name,
-            object: {
-              name: name => name === MochaMixVariable
-            }
+  root.find(j.VariableDeclaration, {
+    declarations: [{
+      type: j.VariableDeclarator.name,
+      init: {
+        type: j.CallExpression.name,
+        callee: {
+          type: j.MemberExpression.name,
+          object: {
+            name: name => name === MochaMixVariable
           }
         }
-      }]
-    })
-    .forEach((p) => {
-      variables[p.value.declarations[0].id.name] = p.value.declarations[0]
-        .init.arguments[0].properties[1].value.value;
-      p.prune();
-    })
-    .toSource();
+      }
+    }]
+  })
+  .forEach((p) => {
+    variables[p.value.declarations[0].id.name] = p.value.declarations[0]
+      .init.arguments[0].properties[1].value.value;
+    p.prune();
+  });
 
   // find component variable name by looking for mix.import
-  body = j(body)
-    .find(j.ExpressionStatement, {
-      expression: {
-        type: j.AssignmentExpression.name,
-        right: {
-          type: j.CallExpression.name,
-          callee: {
-            type: j.MemberExpression.name,
-            object: {
-              name: name => variables[name] != null
-            }
+  root.find(j.ExpressionStatement, {
+    expression: {
+      type: j.AssignmentExpression.name,
+      right: {
+        type: j.CallExpression.name,
+        callee: {
+          type: j.MemberExpression.name,
+          object: {
+            name: name => variables[name] != null
           }
         }
       }
-    })
-    .forEach((p) => {
-      variablesToRemove.push(p.value.expression.left.name);
-      imports[p.value.expression.left.name]
-        = variables[p.value.expression.right.callee.object.name];
-      p.prune();
-    })
-    .toSource();
+    }
+  })
+  .forEach((p) => {
+    variablesToRemove.push(p.value.expression.left.name);
+    imports[p.value.expression.left.name]
+      = variables[p.value.expression.right.callee.object.name];
+    p.prune();
+  });
 
   // replace renderIntoDocument calls with mount
-  body = j(body)
-    .find(j.CallExpression, {
-      callee: {
-        name: 'renderIntoDocument'
-      }
-    })
-    .forEach((p) => {
-      p.value.callee.name = 'mount';
-    })
-    .toSource();
+  root.find(j.CallExpression, {
+    callee: {
+      name: 'renderIntoDocument'
+    }
+  })
+  .forEach((p) => {
+    p.value.callee.name = 'mount';
+  });
 
   // remove before statement with require loading components.
-  body = j(body)
-    .find(j.ExpressionStatement, {
-      expression: {
-        callee: {
-          name: 'before'
-        },
-        arguments: [{
-          type: j.ArrowFunctionExpression.name,
-          body: {
-            type: j.BlockStatement.name
-          }
-        }]
-      }
-    })
-    .forEach((p) => {
-      p.value.expression.arguments.forEach((arrFn) => {
-        arrFn.body.body.forEach((statement) => {
-          const name = statement.expression.left.name;
-          variablesToRemove.push(name);
-          imports[name] = statement.expression.right.arguments[0].value;
-        });
-      });
-
-      p.prune();
-    })
-    .toSource();
-
-  // remove variableDeclarations for components
-  body = j(body)
-    .find(j.VariableDeclaration, {
-      declarations: [{
-        id: {
-          name: name => variablesToRemove.indexOf(name) !== -1
+  root.find(j.ExpressionStatement, {
+    expression: {
+      callee: {
+        name: 'before'
+      },
+      arguments: [{
+        type: j.ArrowFunctionExpression.name,
+        body: {
+          type: j.BlockStatement.name
         }
       }]
-    })
-    .remove()
-    .toSource();
+    }
+  })
+  .forEach((p) => {
+    p.value.expression.arguments.forEach((arrFn) => {
+      arrFn.body.body.forEach((statement) => {
+        const name = statement.expression.left.name;
+        variablesToRemove.push(name);
+        imports[name] = statement.expression.right.arguments[0].value;
+      });
+    });
 
-  body = j(body)
-    .find(j.StringLiteral, {
-      value: value => value.indexOf('data-component')
-    })
-    .forEach((p) => {
-      p.value.value = p.value.value.replace('=', '="').replace(']', '"]');
-    })
-    .toSource({ quote: 'single' });
+    p.prune();
+  });
+
+  // remove variableDeclarations for components
+  root.find(j.VariableDeclaration, {
+    declarations: [{
+      id: {
+        name: name => variablesToRemove.indexOf(name) !== -1
+      }
+    }]
+  })
+  .remove();
+
+  root.find(j.StringLiteral, {
+    value: value => value.indexOf('data-component')
+  })
+  .forEach((p) => {
+    p.value.value = p.value.value.replace('=', '="').replace(']', '"]');
+  });
 
   // replace findRenderedComponentWithType
-  body = j(body)
-    .find(j.CallExpression, {
-      callee: {
-        name: name => name === 'findRenderedComponentWithType' || name === 'elementQuerySelector'
-      }
-    })
-    .replaceWith(p => j.callExpression(
-      j.memberExpression(p.value.arguments[0], j.identifier('find')),
-      [p.value.arguments[1]]
-    ))
-    .toSource();
+  root.find(j.CallExpression, {
+    callee: {
+      name: name => name === 'findRenderedComponentWithType' || name === 'elementQuerySelector'
+    }
+  })
+  .replaceWith(p => j.callExpression(
+    j.memberExpression(p.value.arguments[0], j.identifier('find')),
+    [p.value.arguments[1]]
+  ));
 
   // remove old imports
-  body = rmReactUtils(j, body);
+  rmReactUtils(j, root);
 
   function createSpecificImport(members, source) {
     return j.importDeclaration(
@@ -164,34 +149,22 @@ module.exports = function transformer(file, api) {
   }
 
   // create imports and add TestMode for radium
-  body = j(body)
-    .find(j.Program)
-    .forEach((p) => {
-      const statements = [];
-      statements.push(createSpecificImport(['mount'], 'enzyme'));
-      // statements.push(createSpecificImport(['TestMode'], 'radium'));
+  root.find(j.Program)
+  .forEach((p) => {
+    const statements = [];
+    statements.push(createSpecificImport(['mount'], 'enzyme'));
 
-      Object.keys(imports).forEach((key) => {
-        statements.push(createDefaultImport(key, imports[key]));
-      });
+    Object.keys(imports).forEach((key) => {
+      statements.push(createDefaultImport(key, imports[key]));
+    });
 
-      /* statements.push(
-        j.expressionStatement(
-          j.callExpression(
-            j.memberExpression(j.identifier('TestMode'), j.identifier('enable')),
-            []
-          )
-        )
-      ); */
+    p.value.body = statements.concat(p.value.body);
+  });
 
-      p.value.body = statements.concat(p.value.body);
-    })
-    .toSource({ quote: 'single' });
+  convertProps(j, root);
+  wrapInteralCalls(j, root);
 
-  body = convertProps(j, body);
-  body = wrapInteralCalls(j, body);
-
-  return body;
+  return root.toSource({ quote: 'single' });
 };
 
 module.exports.parser = 'babylon';

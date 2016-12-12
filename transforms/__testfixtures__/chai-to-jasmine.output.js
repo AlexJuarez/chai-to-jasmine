@@ -1,3 +1,22 @@
+describe('Instantiating TextField', () => {
+  it('should set the placeholder correctly', () => {
+    expect(textField.props.placeholder).toBe(PLACEHOLDER);
+    expect(textField.props.placeholder).not.toBe(PLACEHOLDER);
+  });
+
+  it('should inherit id prop', () => {
+    expect(dropdown.props.id).toBe(STANDARD_PROPS.id);
+    expect(dropdown.props.id).not.toBe(STANDARD_PROPS.id);
+  });
+
+  it('should map open prop to visible prop', () => {
+    expect(dropdown.props.visible).toThrowError(STANDARD_PROPS.open);
+    expect(dropdown.props.id).not.toThrowError(STANDARD_PROPS.id);
+  });
+
+  thing1.equal(thing2);
+});
+
 // ok
 expect('everything').toBeTruthy();
 expect(1).toBeTruthy();
@@ -73,3 +92,30 @@ expect([4, 2]).toEqual(jasmine.arrayContaining([2, 4]));
 expect([5, 2]).not.toEqual(jasmine.arrayContaining([5, 2, 1]));
 
 expect([{ id: 1 }]).toEqual(jasmine.arrayContaining([{ id: 1 }]));
+
+// keys
+expect([1, 2, 3]).toEqual(jasmine.arrayContaining([1, 2]));
+expect(Object.keys({ foo: 1, bar: 2 })).toEqual(jasmine.arrayContaining(Object.keys({'bar': 6, 'foo': 7})));
+expect(Object.keys({ foo: 1, bar: 2, baz: 3 })).toEqual(jasmine.arrayContaining(['bar', 'foo']));
+expect(Object.keys({ foo: 1, bar: 2, baz: 3 })).toEqual(jasmine.arrayContaining(Object.keys({'bar': 6})));
+
+// a, an
+expect(typeof 'test').toBe('string');
+expect(typeof { foo: 'bar' }).toBe('object');
+expect(typeof null).toBe('null');
+expect(typeof undefined).toBe('undefined');
+expect(typeof new Error).toBe('error');
+expect(typeof new Promise).toBe('promise');
+expect(typeof new Float32Array()).toBe('float32array');
+expect(typeof Symbol()).toBe('symbol');
+
+// instanceof
+expect(foo instanceof Foo).toBe(true);
+
+expect(Chai instanceof Tea).toBe(true);
+expect([ 1, 2, 3 ] instanceof Array).toBe(true);
+
+// lengthOf
+
+expect([ 1, 2, 3].length).toBe(3);
+expect('foobar'.length).toBe(6);

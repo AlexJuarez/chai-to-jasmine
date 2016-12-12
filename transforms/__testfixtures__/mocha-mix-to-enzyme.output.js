@@ -1,9 +1,7 @@
 import { mount } from 'enzyme';
-import { TestMode } from 'radium';
 import SingleSelect from './_SingleSelect';
 import DropdownTargetBase from '../dropdowns/_DropdownTargetBase';
 import TextField from '../input-fields/TextField';
-TestMode.enable();
 import React from 'react';
 
 import { NOOP } from '../base/Base';
