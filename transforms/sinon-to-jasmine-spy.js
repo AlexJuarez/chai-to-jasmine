@@ -106,6 +106,21 @@ module.exports = function transformer(file, api) {
     const rest = getAllBefore('have', p.value);
     const containsNot = chainContains('not', p.value, 'have');
 
+    j(rest)
+      .find(j.CallExpression, {
+        callee: {
+          property: {
+            name: 'withArgs'
+          }
+        }
+      })
+      .replaceWith((p1) => {
+        p.parent.parent.value.body.push(
+          j.expressionStatement(createCall('toHaveBeenCalledWith', p1.value.arguments, rest))
+        );
+        return p1.value.callee.object;
+      });
+
     switch (p.value.property.name) {
       case 'called':
         return createCall('toHaveBeenCalled', [], rest, containsNot);

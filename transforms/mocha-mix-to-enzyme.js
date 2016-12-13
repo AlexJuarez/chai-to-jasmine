@@ -42,6 +42,23 @@ module.exports = function transformer(file, api) {
   .forEach((p) => {
     variables[p.value.declarations[0].id.name] = p.value.declarations[0]
       .init.arguments[0].properties[1].value.value;
+    j(p.node)
+      .find(j.ObjectProperty, {
+        key: {
+          type: j.Identifier.name,
+          name: 'mocks'
+        },
+        value: {
+          type: j.ObjectExpression.name
+        }
+      })
+      .forEach((p1) => {
+        j(p1.node)
+          .find(j.ObjectProperty)
+          .forEach((p2) => {
+            imports[p2.value.key.name] = p2.value.value.value;
+          });
+      });
     p.prune();
   });
 
