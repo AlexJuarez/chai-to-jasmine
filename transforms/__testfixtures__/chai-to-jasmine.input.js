@@ -119,3 +119,20 @@ expect([ 1, 2, 3 ]).to.be.instanceof(Array);
 
 expect([ 1, 2, 3]).to.have.lengthOf(3);
 expect('foobar').to.have.lengthOf(6);
+
+// ownPropertyDescriptor
+
+expect('test').to.have.ownPropertyDescriptor('length');
+expect('test').to.have.ownPropertyDescriptor('length', { enumerable: false, configurable: false, writable: false, value: 4 });
+expect('test').not.to.have.ownPropertyDescriptor('length', { enumerable: false, configurable: false, writable: false, value: 3 });
+
+// ownProperty
+
+expect('test').to.have.ownProperty('length');
+
+// property
+
+// simple referencing
+var obj = { foo: 'bar' };
+expect(obj).to.have.property('foo');
+expect(obj).to.have.property('foo', 'bar');

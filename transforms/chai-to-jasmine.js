@@ -1,10 +1,10 @@
 const util = require('./util');
-// not implemented property, ownProperty, respondTo, ownPropertyDescriptor
+// not implemented respondTo
 // modifications, within, oneOf, change, increase, decrease - statement modification
 
 const fns = ['keys', 'a', 'an', 'instanceof', 'lengthof', 'equal', 'throw', 'include',
   'contain', 'eql', 'above', 'least', 'below', 'most', 'match', 'string',
-  'members'];
+  'members', 'property', 'ownproperty', 'ownpropertydescriptor'];
 
 const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist', 'empty'];
 
@@ -173,6 +173,42 @@ module.exports = function transformer(file, api) {
             updateExpect(value, node => j.memberExpression(node, j.identifier('length'))),
             containsNot
           );
+        case 'property':
+          return args.length === 1 ?
+            createCall('toBeTruthy', [],
+              updateExpect(value, node => j.callExpression(
+                j.memberExpression(node, j.identifier('hasOwnProperty')),
+                [args[0]]
+              ))
+            ) :
+            createCall('toEqual', [args[1]],
+              updateExpect(value, node => j.memberExpression(
+                node, args[0], true
+              ))
+            );
+        case 'ownproperty':
+          return createCall('toBeTruthy', [],
+            updateExpect(value, node => j.callExpression(
+              j.memberExpression(node, j.identifier('hasOwnProperty')),
+              [args[0]]
+            ))
+          );
+        case 'ownpropertydescriptor':
+          return args.length === 1 ?
+            createCall('toBeUndefined', [],
+              updateExpect(value, node => j.callExpression(
+                j.memberExpression(
+                  j.identifier('Object'), j.identifier('getOwnPropertyDescriptor')),
+                [node, args[0]]
+              )), true
+            ) :
+            createCall('toEqual', [args[1]],
+              updateExpect(value, node => j.callExpression(
+                j.memberExpression(
+                  j.identifier('Object'), j.identifier('getOwnPropertyDescriptor')),
+                [node, args[0]]
+              ))
+            );
         default:
           return p;
       }

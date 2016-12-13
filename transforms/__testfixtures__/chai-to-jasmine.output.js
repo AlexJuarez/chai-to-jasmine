@@ -119,3 +119,20 @@ expect([ 1, 2, 3 ] instanceof Array).toBe(true);
 
 expect([ 1, 2, 3].length).toBe(3);
 expect('foobar'.length).toBe(6);
+
+// ownPropertyDescriptor
+
+expect(Object.getOwnPropertyDescriptor('test', 'length')).not.toBeUndefined();
+expect(Object.getOwnPropertyDescriptor('test', 'length')).toEqual({ enumerable: false, configurable: false, writable: false, value: 4 });
+expect(Object.getOwnPropertyDescriptor('test', 'length')).toEqual({ enumerable: false, configurable: false, writable: false, value: 3 });
+
+// ownProperty
+
+expect('test'.hasOwnProperty('length')).toBeTruthy();
+
+// property
+
+// simple referencing
+var obj = { foo: 'bar' };
+expect(obj.hasOwnProperty('foo')).toBeTruthy();
+expect(obj['foo']).toEqual('bar');
