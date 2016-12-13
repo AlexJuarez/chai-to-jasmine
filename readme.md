@@ -29,11 +29,11 @@ within, oneOf, change, increase, decrease
 
 #### `.keys`
 
-`.any` is not currently supported, so expressions of the form
+`.any` is not currently supported, e.g. the following code will not correctly be converted
 ```javascript
 expect([1, 3, 4]).to.have.any.keys(1, 2);
 ```
-will not correctly be converted
+
 Input
 ```javascript
 expect([1, 2, 3]).to.have.all.keys(1, 2);
