@@ -137,7 +137,7 @@ module.exports = function transformer(file, api) {
 
   root.find(j.CallExpression, {
     callee: {
-      name: 'simulateEvent'
+      name: name => name === 'simulateEvent' || name === 'simulateNativeEvent'
     }
   }).replaceWith(p =>j.callExpression(
     j.memberExpression(p.value.arguments[0], j.identifier('simulate')),
@@ -190,6 +190,17 @@ module.exports = function transformer(file, api) {
 
     p.prune();
   });
+
+  root.find(j.MemberExpression, {
+    object: {
+      object: {
+        name: 'mix'
+      },
+      property: {
+        name: 'mocks'
+      }
+    }
+  }).replaceWith(p => p.value.property);
 
   // remove variableDeclarations for components
   root.find(j.VariableDeclaration, {

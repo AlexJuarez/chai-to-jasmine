@@ -6,7 +6,8 @@ const enzymeFns = [
   'setState',
   'mount',
   'unmount',
-  'instance'
+  'instance',
+  'state'
 ];
 
 module.exports = (j, root) => {
