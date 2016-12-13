@@ -2,9 +2,9 @@ const util = require('./util');
 // not implemented respondTo
 // modifications, within, oneOf, change, increase, decrease - statement modification
 
-const fns = ['keys', 'a', 'an', 'instanceof', 'lengthof', 'equal', 'throw', 'include',
+const fns = ['keys', 'a', 'an', 'instanceof', 'lengthof', 'length', 'equal', 'throw', 'include',
   'contain', 'eql', 'above', 'least', 'below', 'most', 'match', 'string',
-  'members', 'property', 'ownproperty', 'ownpropertydescriptor'];
+  'members', 'property', 'ownproperty', 'ownpropertydescriptor', 'gte', 'lte'];
 
 const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist', 'empty'];
 
@@ -132,10 +132,12 @@ module.exports = function transformer(file, api) {
         case 'above':
           return createCall('toBeGreaterThan', args, rest, containsNot);
         case 'least':
+        case 'gte':
           return createCall('toBeGreaterThanOrEqual', args, rest, containsNot);
         case 'below':
           return createCall('toBeLessThan', args, rest, containsNot);
         case 'most':
+        case 'lte':
           return createCall('toBeLessThanOrEqual', args, rest, containsNot);
         case 'match':
           return createCall('toMatch', args, rest, containsNot);
@@ -168,6 +170,7 @@ module.exports = function transformer(file, api) {
             updateExpect(value, node => j.binaryExpression('instanceof', node, args[0])),
             containsNot
           );
+        case 'length':
         case 'lengthof':
           return createCall('toBe', args,
             updateExpect(value, node => j.memberExpression(node, j.identifier('length'))),

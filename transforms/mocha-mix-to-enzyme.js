@@ -1,6 +1,7 @@
 const rmReactUtils = require('./helpers/rm-react-utils');
 const convertProps = require('./helpers/convert-props-for-enzyme');
 const wrapInteralCalls = require('./helpers/wrap-internal-calls-for-enzyme');
+const util = require('./util');
 
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
@@ -9,6 +10,8 @@ module.exports = function transformer(file, api) {
   const variables = {};
   const variablesToRemove = [];
   const imports = {};
+
+  const createCallChain = util.createCallChain(j);
 
   // locate and remove 'mocha-mix' import
   root.find(j.ImportDeclaration, {
@@ -107,24 +110,42 @@ module.exports = function transformer(file, api) {
   });
 
   // replace findRenderedComponentWithType
-  root.find(j.CallExpression, {
-    callee: {
-      name: 'findRenderedComponentWithType'
-    }
-  }).replaceWith(p => j.callExpression(
-    j.memberExpression(p.value.arguments[0], j.identifier('find')),
-    [p.value.arguments[1]]
-  ));
+  const findExpressions = ['scryRenderedComponentsWithType', 'findRenderedComponentWithType',
+    'isCompositeComponentElementWithType', 'scryRenderedDOMComponentsWithType',
+    'findRenderedComponentWithType', 'elementQuerySelectorAll'];
 
   root.find(j.CallExpression, {
     callee: {
-      name: name => name === 'isCompositeComponentElementWithType' ||
-        name === 'scryRenderedDOMComponentsWithType'
+      name: name => findExpressions.indexOf(name) !== -1
     }
-  }).replaceWith(p => j.callExpression(
-    j.memberExpression(p.value.arguments[0], j.identifier('find')),
-    [p.value.arguments[1]]
-  ))
+  }).replaceWith(p =>
+    createCallChain([p.value.arguments[0], 'find'], [p.value.arguments[1]]));
+
+  root.find(j.VariableDeclarator, {
+    init: {
+      callee: {
+        property: {
+          name: 'find'
+        }
+      }
+    }
+  }).forEach((p) => {
+    root.find(j.MemberExpression, {
+      object: {
+        name: name => name === p.value.id.name
+      },
+      property: {
+        type: j.NumericLiteral.name
+      }
+    }).replaceWith(p1 => createCallChain([p1.value.object, 'at'], [p1.value.property]));
+  });
+
+  root.find(j.CallExpression, {
+    callee: {
+      name: 'elementQuerySelector'
+    }
+  }).replaceWith(p => createCallChain([
+    createCallChain([p.value.arguments[0], 'find'], [p.value.arguments[1]]), 'first'], []));
 
   root.find(j.CallExpression, {
     callee: {
@@ -141,7 +162,7 @@ module.exports = function transformer(file, api) {
     }
   }).replaceWith(p =>j.callExpression(
     j.memberExpression(p.value.arguments[0], j.identifier('simulate')),
-    [p.value.arguments[1]]
+    p.value.arguments.splice(1)
   ));
 
   // replace refs
@@ -154,8 +175,8 @@ module.exports = function transformer(file, api) {
       }
     }
   }).replaceWith(p => j.callExpression(
-    j.memberExpression(p.value.object.object, j.identifier('find')),
-    [p.value.property]
+    j.memberExpression(p.value.object.object, j.identifier('ref')),
+    [j.stringLiteral(p.value.property.name)]
   ));
 
   // remove before statement with require loading components.
@@ -202,6 +223,24 @@ module.exports = function transformer(file, api) {
     }
   }).replaceWith(p => p.value.property);
 
+  root.find(j.CallExpression, {
+    callee: {
+      property: {
+        name: 'getAttribute'
+      }
+    }
+  }).replaceWith(p => createCallChain([
+    createCallChain([p.value.callee.object, 'render'], []),
+    'attr'
+  ], p.value.arguments));
+
+  root.find(j.MemberExpression, {
+    property: {
+      name: 'textContent'
+    }
+  }).replaceWith(p =>
+    j.callExpression(j.memberExpression(p.value.object, j.identifier('text')), []));
+
   // remove variableDeclarations for components
   root.find(j.VariableDeclaration, {
     declarations: [{
@@ -216,19 +255,10 @@ module.exports = function transformer(file, api) {
     value: value => value.indexOf('data-component')
   })
   .forEach((p) => {
-    p.value.value = p.value.value.replace('=', '="').replace(']', '"]');
-  });
-
-  // replace findRenderedComponentWithType
-  root.find(j.CallExpression, {
-    callee: {
-      name: name => name === 'findRenderedComponentWithType' || name === 'elementQuerySelector'
+    if (p.value.value.indexOf('=') !== -1) {
+      p.value.value = p.value.value.replace('=', '="').replace(']', '"]');
     }
-  })
-  .replaceWith(p => j.callExpression(
-    j.memberExpression(p.value.arguments[0], j.identifier('find')),
-    [p.value.arguments[1]]
-  ));
+  });
 
   // remove old imports
   rmReactUtils(j, root);

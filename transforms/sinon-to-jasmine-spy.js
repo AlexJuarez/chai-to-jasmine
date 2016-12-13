@@ -92,8 +92,11 @@ module.exports = function transformer(file, api) {
       type: j.MemberExpression.name
     }
   }).replaceWith((p) => {
-    const rest = getAllBefore('have', p.value);
+    let rest = getAllBefore('have', p.value);
     const containsNot = chainContains('not', p.value, 'have');
+    if (chainContains('to', rest)) {
+      rest = getAllBefore('to', p.value);
+    }
 
     updateWithArgs(rest, p);
 
@@ -122,8 +125,11 @@ module.exports = function transformer(file, api) {
   })
   .replaceWith((p) => {
     const haveOrAlways = name => ['have', 'always'].indexOf(name) !== -1;
-    const rest = getAllBefore(haveOrAlways, p.value.callee);
+    let rest = getAllBefore(haveOrAlways, p.value.callee);
     const containsNot = chainContains('not', p.value, haveOrAlways);
+    if (chainContains('to', rest)) {
+      rest = getAllBefore('to', p.value);
+    }
 
     updateWithArgs(rest, p);
 

@@ -1,4 +1,8 @@
+const util = require('./../util');
+
 module.exports = (j, root) => {
+  const createCallChain = util.createCallChain(j);
+
   root.find(j.MemberExpression, {
     object: {
       object: {
@@ -65,4 +69,23 @@ module.exports = (j, root) => {
     }
   }).replaceWith(p => j.memberExpression(p.value.object,
     j.callExpression(p.value.property, [])));
+
+  root.find(j.CallExpression, {
+    callee: {
+      property: {
+        name: 'prop'
+      }
+    },
+    arguments: [{
+      type: j.StringLiteral.name,
+      value: 'content'
+    }]
+  }).replaceWith(p => createCallChain(['mount'], [p.value]));
+
+  root.find(j.MemberExpression, {
+    property: {
+      name: 'children'
+    }
+  }).filter(p => p.parent.value.type !== j.CallExpression.name)
+    .replaceWith(p => createCallChain([p.value.object, p.value.property], []));
 };

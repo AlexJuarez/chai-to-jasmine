@@ -1,10 +1,13 @@
 module.exports = j => (chain, args) => {
   const arr = chain.reverse();
 
-  let curr = j.identifier(arr.pop());
+  let val = arr.pop();
+  let temp = (typeof val === 'string') ? j.identifier(val) : val;
+  let curr = temp;
 
   while (chain.length) {
-    const temp = j.identifier(arr.pop());
+    val = arr.pop();
+    temp = (typeof val === 'string') ? j.identifier(val) : val;
     curr = j.memberExpression(curr, temp);
   }
 
