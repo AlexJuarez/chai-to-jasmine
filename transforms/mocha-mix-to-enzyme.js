@@ -126,6 +126,24 @@ module.exports = function transformer(file, api) {
     [p.value.arguments[1]]
   ))
 
+  root.find(j.CallExpression, {
+    callee: {
+      name: 'findDOMNode'
+    }
+  }).replaceWith(p => j.callExpression(
+    j.memberExpression(p.value.arguments[0], j.identifier('render')),
+    []
+  ));
+
+  root.find(j.CallExpression, {
+    callee: {
+      name: 'simulateEvent'
+    }
+  }).replaceWith(p =>j.callExpression(
+    j.memberExpression(p.value.arguments[0], j.identifier('simulate')),
+    [p.value.arguments[1]]
+  ));
+
   // replace refs
   root.find(j.MemberExpression, {
     object: {

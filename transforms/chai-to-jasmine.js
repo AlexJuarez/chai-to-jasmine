@@ -95,7 +95,7 @@ module.exports = function transformer(file, api) {
             createCall('toBeFalsy', [], updateExpect(rest, addLength)) :
             createCall('toBeTruthy', [], updateExpect(rest, addLength));
         default:
-          return p;
+          return value;
       }
     })
     .size();
@@ -153,7 +153,7 @@ module.exports = function transformer(file, api) {
         case 'a':
         case 'an':
           if (!args.length) {
-            return p;
+            return value;
           }
           if (args[0].type === j.StringLiteral.name) {
             return createCall('toBe', args,
@@ -210,7 +210,7 @@ module.exports = function transformer(file, api) {
               ))
             );
         default:
-          return p;
+          return value;
       }
     })
     .size();

@@ -16,4 +16,15 @@ module.exports = function (j, root) {
     }]
   })
   .remove();
+
+  root
+    .find(j.VariableDeclarator, {
+      init: {
+        object: {
+          name: 'ReactTestUtils'
+        }
+      }
+    })
+    .renameTo('mount')
+    .remove();
 };
