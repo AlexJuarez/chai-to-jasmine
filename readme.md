@@ -34,7 +34,7 @@ within, oneOf, change, increase, decrease
 expect([1, 3, 4]).to.have.any.keys(1, 2);
 ```
 
-Input
+##### Input
 ```javascript
 expect([1, 2, 3]).to.have.all.keys(1, 2);
 expect({ foo: 1, bar: 2 }).to.have.all.keys({'bar': 6, 'foo': 7});
@@ -42,7 +42,7 @@ expect({ foo: 1, bar: 2, baz: 3 }).to.contain.all.keys(['bar', 'foo']);
 expect({ foo: 1, bar: 2, baz: 3 }).to.contain.all.keys({'bar': 6});
 ```
 
-Output
+##### Output
 ```javascript
 expect([1, 2, 3]).toEqual(jasmine.arrayContaining([1, 2]));
 expect(Object.keys({ foo: 1, bar: 2 })).toEqual(jasmine.arrayContaining(Object.keys({'bar': 6, 'foo': 7})));
@@ -54,7 +54,7 @@ expect(Object.keys({ foo: 1, bar: 2, baz: 3 })).toEqual(jasmine.arrayContaining(
 
 The converted form uses typeof to make the type checking, some of the chai types will not be correctly checked.
 
-Input
+##### Input
 ```javascript
 expect('test').to.be.a('string');
 expect({ foo: 'bar' }).to.be.an('object');
@@ -66,7 +66,7 @@ expect(new Float32Array()).to.be.a('float32array');
 expect(Symbol()).to.be.a('symbol');
 ```
 
-Output
+##### Output
 ```javascript
 expect(typeof 'test').toBe('string');
 expect(typeof { foo: 'bar' }).toBe('object');
@@ -83,14 +83,14 @@ expect(typeof Symbol()).toBe('symbol');
 This assertion is converted to a simpler length check which may not
 be the intention
 
-Input
+##### Input
 ```javascript
 expect(foo).to.exist;
 expect(bar).to.not.exist;
 expect(baz).to.not.exist;
 ```
 
-Output
+##### Output
 ```javascript
 expect(foo.length).toBeTruthy();
 expect(bar.length).toBeFalsy();
