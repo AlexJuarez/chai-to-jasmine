@@ -3,91 +3,37 @@
  * check https://github.com/domenic/sinon-chai for more info.
  * @type {[*]}
  */
+const util = require('./util');
+
 const properties = ['called', 'calledOnce', 'calledTwice', 'calledThrice'];
 const fns = ['callCount', 'calledWith', 'calledWithExactly', 'calledWithMatch'];
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
   const root = j(file.source);
 
-  const closest = (path, type) => {
-    let parent = path.parent;
-    while (parent && parent.value.type !== type.name) {
-      parent = parent.parent;
-    }
-
-    return parent;
-  };
-
-  function createCall(fn, args, rest, containsNot) {
-    const expression = containsNot ? j.memberExpression(rest, j.identifier('not')) : rest;
-
-    return j.memberExpression(
-      expression,
-      j.callExpression(
-        j.identifier(fn),
-        args
-      ));
-  }
-
-  function chainContains(fn, value, end) {
-    let curr = value;
-    const checkEnd = (typeof end === 'function') ? end : name => name === end;
-
-    while (curr.type === j.MemberExpression.name
-    && curr.property.name !== fn
-    && !checkEnd(curr.property.name)) {
-      curr = curr.object;
-    }
-
-    return curr.type === j.MemberExpression.name && curr.property.name === fn;
-  }
-
-  function getAllBefore(memberName, value) {
-    let rest = value;
-    const equalsMemberName = (typeof memberName === 'function') ? memberName : (name => name === memberName);
-    while (rest.type === j.MemberExpression.name && !equalsMemberName(rest.property.name)) {
-      rest = rest.object;
-    }
-
-    if (equalsMemberName(rest.property.name)) {
-      rest = rest.object;
-    }
-    return rest;
-  }
+  const createCall = util.createCall(j);
+  const chainContains = util.chainContains(j);
+  const getAllBefore = util.getNodeBeforeMemberExpression(j);
+  const createCallChain = util.createCallChain(j);
 
   function addMatcher(node) {
     switch (node.type) {
       case j.RegExpLiteral.name:
       case j.StringLiteral.name:
-        return j.callExpression(
-          j.memberExpression(
-            j.identifier('jasmine'),
-            j.identifier('stringMatching')
-          ),
-          [node]
-        );
+        return createCallChain(['jasmine', 'stringMatching'], [node]);
       case j.ObjectExpression.name:
-        return j.callExpression(
-          j.memberExpression(
-            j.identifier('jasmine'),
-            j.identifier('objectContaining')
-          ),
-          [node]
-        );
+        return createCallChain(['jasmine', 'objectContaining'], [node]);
       default:
         return node;
     }
   }
 
-  root
-  .find(j.CallExpression, {
+  root.find(j.CallExpression, {
     callee: {
       type: j.MemberExpression.name,
       object: {
+        type: j.Identifier.name,
         name: 'sinon'
-      },
-      property: {
-        name: name => name === 'spy' || name === 'stub'
       }
     }
   })
@@ -95,24 +41,25 @@ module.exports = function transformer(file, api) {
     switch (p.value.callee.property.name) {
       case 'spy': {
         if (p.value.arguments.length === 0) {
-          return j.callExpression(
-            j.memberExpression(
-              j.identifier('jasmine'), j.identifier('createSpy')
-            ),
-            []
-          );
+          return createCallChain(['jasmine', 'createSpy'], []);
+        } else if (p.value.arguments.length === 2) {
+          return createCallChain(['jasmine', 'spyOn'], p.value.arguments);
         }
-        return p;
+        return p.node;
       }
       case 'stub':
-        return j.callExpression(
-          j.memberExpression(
-            j.identifier('jasmine'), j.identifier('spyOn')
-          ),
-          p.value.arguments
-        );
+        return createCallChain(['jasmine', 'spyOn'], p.value.arguments);
+      case 'match':
+        return p.value.arguments;
+      case 'useFakeTimers':
+        j(p).closest(j.ExpressionStatement)
+          .forEach((p1) => {
+            p1.prune();
+          });
+        return null;
       default:
-        return p;
+        console.warn(`sinon.${p.value.callee.property.name} is unhandled`);
+        return p.node;
     }
   });
 

@@ -104,6 +104,16 @@ module.exports = function transformer(file, api) {
     [p.value.arguments[1]]
   ));
 
+  root.find(j.CallExpression, {
+    callee: {
+      name: name => name === 'isCompositeComponentElementWithType' ||
+        name === 'scryRenderedDOMComponentsWithType'
+    }
+  }).replaceWith(p => j.callExpression(
+    j.memberExpression(p.value.arguments[0], j.identifier('find')),
+    [p.value.arguments[1]]
+  ))
+
   // replace refs
   root.find(j.MemberExpression, {
     object: {
@@ -133,13 +143,20 @@ module.exports = function transformer(file, api) {
     }
   })
   .forEach((p) => {
-    p.value.expression.arguments.forEach((arrFn) => {
-      arrFn.body.body.forEach((statement) => {
-        const name = statement.expression.left.name;
-        variablesToRemove.push(name);
-        imports[name] = statement.expression.right.arguments[0].value;
+    j(p).find(j.BlockStatement)
+      .forEach((blockPath) => {
+        j(blockPath).find(j.AssignmentExpression, {
+          right: {
+            callee: {
+              name: 'require'
+            }
+          }
+        }).forEach((requirePath) => {
+          const name = requirePath.value.left.name;
+          variablesToRemove.push(name);
+          imports[name] = requirePath.value.right.arguments[0].value;
+        });
       });
-    });
 
     p.prune();
   });
@@ -196,7 +213,7 @@ module.exports = function transformer(file, api) {
       const statements = [];
       statements.push(createSpecificImport(['mount'], 'enzyme'));
 
-      Object.keys(imports).forEach((key) => {
+      Object.keys(imports).filter(k => imports[k]).forEach((key) => {
         statements.push(createDefaultImport(key, imports[key]));
       });
 
