@@ -29,8 +29,11 @@ within, oneOf, change, increase, decrease
 
 #### `.keys`
 
-The any keyword as a predicate is not currently supported
-
+`.any` is not currently supported, so expressions of the form
+```javascript
+expect([1, 3, 4]).to.have.any.keys(1, 2);
+```
+will not correctly be converted
 Input
 ```javascript
 expect([1, 2, 3]).to.have.all.keys(1, 2);
