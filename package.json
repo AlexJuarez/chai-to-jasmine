@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "test:mocha-mix": "jscodeshift -t ./transforms/mocha-mix-to-enzyme.js ./transforms/__testfixtures__/mocha-mix-to-enzyme.input.js -d -p --",
     "jest": "jest"
   },
   "author": "",

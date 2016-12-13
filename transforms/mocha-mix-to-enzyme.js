@@ -94,6 +94,30 @@ module.exports = function transformer(file, api) {
     p.value.callee.name = 'mount';
   });
 
+  // replace findRenderedComponentWithType
+  root.find(j.CallExpression, {
+    callee: {
+      name: 'findRenderedComponentWithType'
+    }
+  }).replaceWith(p => j.callExpression(
+    j.memberExpression(p.value.arguments[0], j.identifier('find')),
+    [p.value.arguments[1]]
+  ));
+
+  // replace refs
+  root.find(j.MemberExpression, {
+    object: {
+      type: j.MemberExpression.name,
+      property: {
+        type: j.Identifier.name,
+        name: 'refs'
+      }
+    }
+  }).replaceWith(p => j.callExpression(
+    j.memberExpression(p.value.object.object, j.identifier('find')),
+    [p.value.property]
+  ));
+
   // remove before statement with require loading components.
   root.find(j.ExpressionStatement, {
     expression: {
@@ -166,17 +190,18 @@ module.exports = function transformer(file, api) {
   }
 
   // create imports and add TestMode for radium
-  root.find(j.Program)
-  .forEach((p) => {
-    const statements = [];
-    statements.push(createSpecificImport(['mount'], 'enzyme'));
+  root.find(j.ImportDeclaration)
+    .at(-1)
+    .insertAfter(() => {
+      const statements = [];
+      statements.push(createSpecificImport(['mount'], 'enzyme'));
 
-    Object.keys(imports).forEach((key) => {
-      statements.push(createDefaultImport(key, imports[key]));
+      Object.keys(imports).forEach((key) => {
+        statements.push(createDefaultImport(key, imports[key]));
+      });
+
+      return statements;
     });
-
-    p.value.body = statements.concat(p.value.body);
-  });
 
   convertProps(j, root);
   wrapInteralCalls(j, root);

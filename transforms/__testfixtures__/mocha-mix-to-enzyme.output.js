@@ -1,10 +1,11 @@
+import React from 'react';
+
+import { NOOP } from '../base/Base';
+
 import { mount } from 'enzyme';
 import SingleSelect from './_SingleSelect';
 import DropdownTargetBase from '../dropdowns/_DropdownTargetBase';
 import TextField from '../input-fields/TextField';
-import React from 'react';
-
-import { NOOP } from '../base/Base';
 
 const PLACEHOLDER = 'Placeholder';
 

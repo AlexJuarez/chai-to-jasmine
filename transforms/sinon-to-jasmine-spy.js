@@ -9,6 +9,15 @@ module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
   const root = j(file.source);
 
+  const closest = (path, type) => {
+    let parent = path.parent;
+    while (parent && parent.value.type !== type.name) {
+      parent = parent.parent;
+    }
+
+    return parent;
+  };
+
   function createCall(fn, args, rest, containsNot) {
     const expression = containsNot ? j.memberExpression(rest, j.identifier('not')) : rest;
 
@@ -78,21 +87,54 @@ module.exports = function transformer(file, api) {
         name: 'sinon'
       },
       property: {
-        name: 'spy'
+        name: name => name === 'spy' || name === 'stub'
       }
     }
   })
   .replaceWith((p) => {
-    if (p.value.arguments.length === 0) {
-      return j.callExpression(
-        j.memberExpression(
-          j.identifier('jasmine'), j.identifier('createSpy')
-        ),
-        []
-      );
+    switch (p.value.callee.property.name) {
+      case 'spy': {
+        if (p.value.arguments.length === 0) {
+          return j.callExpression(
+            j.memberExpression(
+              j.identifier('jasmine'), j.identifier('createSpy')
+            ),
+            []
+          );
+        }
+        return p;
+      }
+      case 'stub':
+        return j.callExpression(
+          j.memberExpression(
+            j.identifier('jasmine'), j.identifier('spyOn')
+          ),
+          p.value.arguments
+        );
+      default:
+        return p;
     }
-    return p;
   });
+
+  const updateWithArgs = (rest, path) => {
+    j(rest)
+      .find(j.CallExpression, {
+        callee: {
+          property: {
+            name: 'withArgs'
+          }
+        }
+      })
+      .replaceWith((p1) => {
+        j(path)
+          .closest(j.ExpressionStatement)
+          .insertBefore(j.expressionStatement(
+            createCall('toHaveBeenCalledWith', p1.value.arguments, rest)
+          ));
+
+        return p1.value.callee.object;
+      });
+  };
 
   root
   .find(j.MemberExpression, {
@@ -106,20 +148,7 @@ module.exports = function transformer(file, api) {
     const rest = getAllBefore('have', p.value);
     const containsNot = chainContains('not', p.value, 'have');
 
-    j(rest)
-      .find(j.CallExpression, {
-        callee: {
-          property: {
-            name: 'withArgs'
-          }
-        }
-      })
-      .replaceWith((p1) => {
-        p.parent.parent.value.body.push(
-          j.expressionStatement(createCall('toHaveBeenCalledWith', p1.value.arguments, rest))
-        );
-        return p1.value.callee.object;
-      });
+    updateWithArgs(rest, p);
 
     switch (p.value.property.name) {
       case 'called':
@@ -148,6 +177,8 @@ module.exports = function transformer(file, api) {
     const haveOrAlways = name => ['have', 'always'].indexOf(name) !== -1;
     const rest = getAllBefore(haveOrAlways, p.value.callee);
     const containsNot = chainContains('not', p.value, haveOrAlways);
+
+    updateWithArgs(rest, p);
 
     switch (p.value.callee.property.name) {
       case 'callCount':

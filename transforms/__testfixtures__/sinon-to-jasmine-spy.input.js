@@ -9,3 +9,7 @@ onChangeSpy.should.have.callCount(7);
 onChangeSpy.should.have.been.calledWith(1, 2, 3);
 onChangeSpy.should.have.been.calledWithExactly(1, 2, 3);
 onChangeSpy.should.have.been.calledWithMatch('test', 1, /regex/);
+
+it('should be calledWith', () => {
+  onChangeSpy.withArgs({test: '1'}).should.have.been.calledOnce;
+});
