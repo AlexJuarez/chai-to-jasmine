@@ -53,10 +53,22 @@ module.exports = function transformer(file, api) {
         }
       })
       .forEach((p1) => {
-        j(p1.node)
-          .find(j.ObjectProperty)
-          .forEach((p2) => {
-            imports[p2.value.key.name] = p2.value.value.value;
+        p1.value.value.properties
+          .filter(p => p.type === j.ObjectProperty.name)
+          .forEach((prop) => {
+            if (prop.value.type === j.StringLiteral.name) {
+              imports[prop.key.name] = prop.value.value;
+            } else {
+              j(prop)
+                .find(j.ObjectProperty, {
+                  key: {
+                    name: 'import'
+                  }
+                })
+                .forEach((p2) => {
+                  imports[prop.key.name] = p2.value.value.value;
+                })
+            }
           });
       });
     p.prune();
