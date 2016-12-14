@@ -45,22 +45,23 @@ module.exports = (j, root) => {
       }
     }
   })
-  .replaceWith(p => {
+  .replaceWith((p) => {
+    const arg = p.value.computed ? p.value.property : j.stringLiteral(p.value.property.name);
+    let size = 0;
     switch (p.value.object.property.name) {
       case 'props':
-        return j.callExpression(
-          j.memberExpression(p.value.object.object, j.identifier('prop')),
-          [p.value.computed ? p.value.property : j.stringLiteral(p.value.property.name)]
-        );
+        return createCallChain([p.value.object.object, 'prop'], [arg]);
       case 'state':
-        return j.callExpression(
-          j.memberExpression(p.value.object.object, j.identifier('state')),
-          [p.value.computed ? p.value.property : j.stringLiteral(p.value.property.name)]
-        );
+        // for the case foo.state.bar = foobar;
+        size = j(p).closest(j.AssignmentExpression).replaceWith(p1 =>
+          createCallChain([p.value.object.object, 'setState'], [
+            j.objectExpression([j.objectProperty(arg, p1.value.right)])
+          ])
+        ).size();
+        return size ? p.value : createCallChain([p.value.object.object, 'state'], [arg]);
       default:
         return p.value;
     }
-
   });
 
   root.find(j.MemberExpression, {

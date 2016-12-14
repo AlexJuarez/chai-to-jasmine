@@ -7,16 +7,23 @@ module.exports = function transformer(file, api) {
   const files = {};
 
   // Find imports
-  root.find(j.ImportDeclaration)
-    .forEach((p) => {
-      files[p.value.source.value] = true;
-    });
+  root.find(j.ImportDeclaration, {
+    source: {
+      type: j.StringLiteral.name
+    }
+  })
+  .forEach((p) => {
+    files[p.value.source.value] = true;
+  });
 
   // Find require()
   root.find(j.CallExpression, {
     callee: {
       name: 'require'
-    }
+    },
+    arguments: [{
+      type: j.StringLiteral.name
+    }]
   })
   .forEach((p) => {
     files[p.value.arguments[0].value] = true;

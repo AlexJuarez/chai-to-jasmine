@@ -70,7 +70,7 @@ module.exports = function transformer(file, api) {
                 })
                 .forEach((p2) => {
                   imports[prop.key.name] = p2.value.value.value;
-                })
+                });
             }
           });
       });
