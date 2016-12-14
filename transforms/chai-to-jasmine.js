@@ -63,16 +63,11 @@ module.exports = function transformer(file, api) {
     root.find(j.MemberExpression, {
       property: {
         name: name => members.indexOf(name.toLowerCase()) !== -1
-      },
-      object: {
-        type: j.MemberExpression.name
       }
     }).replaceWith((p) => {
       const { value } = p;
-
       const rest = getAllBefore(isPrefix, value, 'should');
       const containsNot = chainContains('not', value, 'to');
-      const addLength = node => j.memberExpression(node, j.identifier('length'));
 
       switch (value.property.name.toLowerCase()) {
         case 'ok':

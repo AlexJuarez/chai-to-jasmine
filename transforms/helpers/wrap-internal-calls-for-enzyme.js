@@ -10,7 +10,8 @@ const enzymeFns = [
   'state',
   'prop',
   'ref',
-  'refs'
+  'refs',
+  'render'
 ];
 
 module.exports = (j, root) => {

@@ -263,6 +263,9 @@ describe('SingleSelect', () => {
       });
 
       it('should call onChange if noItemsMessage is undefined', () => {
+        const r = findDOMNode(rendered);
+
+        expect(r.textContent).toEqual('');
         rendered._handleItemClick({});
         expect(onChangeSpy).toHaveBeenCalledTimes(1);
       });

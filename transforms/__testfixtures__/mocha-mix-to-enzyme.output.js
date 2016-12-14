@@ -117,6 +117,7 @@ describe('SingleSelect', () => {
     const DOWN_ARROW_SELECTOR = '[data-component="TxlIconArrowDown"]';
     const UP_ARROW_SELECTOR = '[data-component="TxlIconArrowUp"]';
     const UP_ARROW_SELECTOR2 = '[data-component="TxlIconArrowUp"]';
+
     let textField;
 
     beforeEach(() => {
@@ -238,6 +239,9 @@ describe('SingleSelect', () => {
       });
 
       it('should call onChange if noItemsMessage is undefined', () => {
+        const r = rendered.render();
+
+        expect(r.text()).toEqual('');
         rendered.instance()._handleItemClick({});
         expect(onChangeSpy).toHaveBeenCalledTimes(1);
       });

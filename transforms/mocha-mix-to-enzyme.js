@@ -175,7 +175,8 @@ module.exports = function transformer(file, api) {
       .forEach((p1) => {
         j(p1).closestScope().find(j.MemberExpression, {
           property: {
-            type: j.Identifier.name
+            type: j.Identifier.name,
+            name: name => name !== 'textContent'
           },
           object: {
             name: name => name === p1.value.id.name
