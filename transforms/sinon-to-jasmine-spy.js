@@ -43,12 +43,12 @@ module.exports = function transformer(file, api) {
         if (p.value.arguments.length === 0) {
           return createCallChain(['jasmine', 'createSpy'], []);
         } else if (p.value.arguments.length === 2) {
-          return createCallChain(['jasmine', 'spyOn'], p.value.arguments);
+          return createCallChain(['spyOn'], p.value.arguments);
         }
         return p.node;
       }
       case 'stub':
-        return createCallChain(['jasmine', 'spyOn'], p.value.arguments);
+        return createCallChain(['spyOn'], p.value.arguments);
       case 'match':
         return p.value.arguments;
       case 'useFakeTimers':

@@ -8,7 +8,6 @@ module.exports = function transformer(file, api) {
   const root = j(file.source);
   let MochaMixVariable = 'MochaMix';
   const variables = {};
-  const variablesToRemove = [];
   const imports = {};
 
   const createCallChain = util.createCallChain(j);
@@ -93,7 +92,6 @@ module.exports = function transformer(file, api) {
     }
   })
   .forEach((p) => {
-    variablesToRemove.push(p.value.expression.left.name);
     imports[p.value.expression.left.name]
       = variables[p.value.expression.right.callee.object.name];
     p.prune();
@@ -106,6 +104,18 @@ module.exports = function transformer(file, api) {
     }
   })
   .forEach((p) => {
+    j(p).closest(j.AssignmentExpression).forEach((p1) => {
+      root.find(j.CallExpression, {
+        callee: {
+          name: 'spyOn'
+        },
+        arguments: [{
+          name: name => name === p1.value.left.name
+        }]
+      }).forEach((p2) => {
+        p2.value.arguments[0] = createCallChain([p2.value.arguments[0], 'instance'], []);
+      });
+    });
     p.value.callee.name = 'mount';
   });
 
@@ -147,6 +157,14 @@ module.exports = function transformer(file, api) {
   }).replaceWith(p => createCallChain([
     createCallChain([p.value.arguments[0], 'find'], [p.value.arguments[1]]), 'first'], []));
 
+  const createArgs = (node, args) => {
+    if (node.value.property.name === 'getAttribute') {
+      return node.parent.value.arguments;
+    }
+
+    return [j.stringLiteral(node.value.property.name)];
+  };
+
   root.find(j.CallExpression, {
     callee: {
       name: 'findDOMNode'
@@ -162,16 +180,24 @@ module.exports = function transformer(file, api) {
           object: {
             name: name => name === p1.value.id.name
           }
-        }).replaceWith(p2 => createCallChain([
-          createCallChain([
+        }).forEach(p2 => {
+          const node = createCallChain([
             createCallChain([
-              p2.value.object,
-              'children'
-            ], []),
-            'first'], []),
-          'attr'
-        ], [j.stringLiteral(p2.value.property.name)]
-        ));
+              createCallChain([
+                p2.value.object,
+                'children'
+              ], []),
+              'first'], []),
+            'attr'
+          ], createArgs(p2));
+
+          if (p2.parent.value.type === j.CallExpression.name &&
+            p2.value.property.name === 'getAttribute'){
+            j(p2.parent).replaceWith(() => node);
+          } else {
+            j(p2).replaceWith(() => node);
+          }
+        });
       });
 
     return createCallChain([p.value.arguments[0], 'render'], []);
@@ -225,7 +251,6 @@ module.exports = function transformer(file, api) {
           }
         }).forEach((requirePath) => {
           const name = requirePath.value.left.name;
-          variablesToRemove.push(name);
           imports[name] = requirePath.value.right.arguments[0].value;
         });
       });
@@ -266,7 +291,7 @@ module.exports = function transformer(file, api) {
   root.find(j.VariableDeclaration, {
     declarations: [{
       id: {
-        name: name => variablesToRemove.indexOf(name) !== -1
+        name: name => Object.keys(imports).indexOf(name) !== -1
       }
     }]
   })
