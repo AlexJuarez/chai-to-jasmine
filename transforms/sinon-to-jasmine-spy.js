@@ -128,7 +128,7 @@ module.exports = function transformer(file, api) {
     let rest = getAllBefore(haveOrAlways, p.value.callee);
     const containsNot = chainContains('not', p.value, haveOrAlways);
     if (chainContains('to', rest)) {
-      rest = getAllBefore('to', p.value);
+      rest = getAllBefore('to', p.value.callee);
     }
 
     updateWithArgs(rest, p);

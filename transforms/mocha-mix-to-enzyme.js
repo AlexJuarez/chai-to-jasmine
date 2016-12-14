@@ -173,7 +173,7 @@ module.exports = function transformer(file, api) {
     // find call instances and update them to .children().first().attr('...')
     j(p).closest(j.VariableDeclarator)
       .forEach((p1) => {
-        root.find(j.MemberExpression, {
+        j(p1).closestScope().find(j.MemberExpression, {
           property: {
             type: j.Identifier.name
           },
@@ -192,10 +192,10 @@ module.exports = function transformer(file, api) {
           ], createArgs(p2));
 
           if (p2.parent.value.type === j.CallExpression.name &&
-            p2.value.property.name === 'getAttribute'){
-            j(p2.parent).replaceWith(() => node);
+            p2.value.property.name === 'getAttribute') {
+            p2.parent.replace(node);
           } else {
-            j(p2).replaceWith(() => node);
+            p2.replace(node);
           }
         });
       });

@@ -62,7 +62,7 @@ describe('SingleSelect', () => {
 
   function getContainerComponent() {
     const dropdown = getDropdownComponent();
-    return dropdown.prop('content');
+    return mount(dropdown.prop('content'));
   }
 
   function getTextFieldComponent() {
@@ -184,8 +184,8 @@ describe('SingleSelect', () => {
 
     it('should render down arrow when dropdown is closed', () => {
       // dropdown closed, down arrow visible
-      expect(rendered.find(DOWN_ARROW_SELECTOR)).toEqual(jasmine.anything());
-      expect(rendered.find(UP_ARROW_SELECTOR)).not.toEqual(jasmine.anything());
+      expect(rendered.find(DOWN_ARROW_SELECTOR).first()).toEqual(jasmine.anything());
+      expect(rendered.find(UP_ARROW_SELECTOR).first()).not.toEqual(jasmine.anything());
     });
 
     it('should render up arrow when dropdown is open', () => {
@@ -196,8 +196,8 @@ describe('SingleSelect', () => {
           open
         />
       );
-      expect(rendered.find(DOWN_ARROW_SELECTOR)).not.toEqual(jasmine.anything());
-      expect(rendered.find(UP_ARROW_SELECTOR)).toEqual(jasmine.anything());
+      expect(rendered.find(DOWN_ARROW_SELECTOR).first()).not.toEqual(jasmine.anything());
+      expect(rendered.find(UP_ARROW_SELECTOR).first()).toEqual(jasmine.anything());
     });
   });
 
