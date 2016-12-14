@@ -151,10 +151,31 @@ module.exports = function transformer(file, api) {
     callee: {
       name: 'findDOMNode'
     }
-  }).replaceWith(p => j.callExpression(
-    j.memberExpression(p.value.arguments[0], j.identifier('render')),
-    []
-  ));
+  }).replaceWith((p) => {
+    // find call instances and update them to .children().first().attr('...')
+    j(p).closest(j.VariableDeclarator)
+      .forEach((p1) => {
+        root.find(j.MemberExpression, {
+          property: {
+            type: j.Identifier.name
+          },
+          object: {
+            name: name => name === p1.value.id.name
+          }
+        }).replaceWith(p2 => createCallChain([
+          createCallChain([
+            createCallChain([
+              p2.value.object,
+              'children'
+            ], []),
+            'first'], []),
+          'attr'
+        ], [j.stringLiteral(p2.value.property.name)]
+        ));
+      });
+
+    return createCallChain([p.value.arguments[0], 'render'], []);
+  });
 
   root.find(j.CallExpression, {
     callee: {

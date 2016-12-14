@@ -87,6 +87,7 @@ module.exports = (j, root) => {
     property: {
       name: 'children'
     }
-  }).filter(p => p.parent.value.type !== j.CallExpression.name)
-    .replaceWith(p => createCallChain([p.value.object, p.value.property], []));
+  }).filter(p => p.parent.value.type !== j.CallExpression.name &&
+    p.parent.value.type !== j.AssignmentExpression.name
+  ).replaceWith(p => createCallChain([p.value.object, p.value.property], []));
 };
