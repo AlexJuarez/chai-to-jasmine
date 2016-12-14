@@ -105,7 +105,7 @@ module.exports = function transformer(file, api) {
   })
   .forEach((p) => {
     j(p).closest(j.AssignmentExpression).forEach((p1) => {
-      root.find(j.CallExpression, {
+      j(p1).closestScope().find(j.CallExpression, {
         callee: {
           name: 'spyOn'
         },
@@ -140,7 +140,7 @@ module.exports = function transformer(file, api) {
       }
     }
   }).forEach((p) => {
-    root.find(j.MemberExpression, {
+    j(p).closestScope().find(j.MemberExpression, {
       object: {
         name: name => name === p.value.id.name
       },
