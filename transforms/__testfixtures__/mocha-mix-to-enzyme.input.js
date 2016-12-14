@@ -140,6 +140,8 @@ describe('SingleSelect', () => {
     ];
     const DOWN_ARROW_SELECTOR = '[data-component=TxlIconArrowDown]';
     const UP_ARROW_SELECTOR = '[data-component=TxlIconArrowUp]';
+    const UP_ARROW_SELECTOR2 = '[data-component="TxlIconArrowUp"]';
+
     let textField;
 
     beforeEach(() => {

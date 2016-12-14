@@ -41,9 +41,9 @@ expect(undefined).toBeUndefined();
 expect(null).toBeDefined();
 
 // exist
-expect(foo.length).toBeTruthy();
-expect(bar.length).toBeFalsy();
-expect(baz.length).toBeFalsy();
+expect(foo).not.toBeUndefined();
+expect(bar).toBeFalsy();
+expect(baz).toBeFalsy();
 
 // equal
 expect('hello').toBe('hello');
@@ -68,6 +68,7 @@ expect('foobar').toContain('bar');
 expect([1,2,3]).toContain(2);
 
 expect('foobar').toContain('foo');
+expect({ foo: 1, bar: 2}).toEqual(jasmine.objectContaining({ bar: 2 }));
 
 // eql
 

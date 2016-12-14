@@ -301,7 +301,9 @@ module.exports = function transformer(file, api) {
     value: value => value.indexOf('data-component')
   })
   .forEach((p) => {
-    if (p.value.value.indexOf('=') !== -1) {
+    const val = p.value.value;
+    const skip = ['="', '"]'];
+    if (val.indexOf('=') !== -1 && !skip.some(v => val.indexOf(v) !== -1)) {
       p.value.value = p.value.value.replace('=', '="').replace(']', '"]');
     }
   });

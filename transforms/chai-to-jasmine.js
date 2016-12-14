@@ -92,8 +92,8 @@ module.exports = function transformer(file, api) {
         case 'empty':
         case 'exist':
           return containsNot ?
-            createCall('toBeFalsy', [], updateExpect(rest, addLength)) :
-            createCall('toBeTruthy', [], updateExpect(rest, addLength));
+            createCall('toBeFalsy', [], rest) :
+            createCall('toBeUndefined', [], rest, true);
         default:
           return value;
       }
@@ -126,6 +126,9 @@ module.exports = function transformer(file, api) {
         case 'include':
         case 'string':
         case 'contain':
+          if (args.length === 1 && args[0].type === j.ObjectExpression.name) {
+            return createCall('toEqual', [containing(args[0])], rest, containsNot);
+          }
           return createCall('toContain', args, rest, containsNot);
         case 'eql':
           return createCall('toEqual', args, rest, containsNot);
