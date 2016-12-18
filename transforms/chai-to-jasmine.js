@@ -4,9 +4,9 @@ const util = require('./util');
 
 const fns = ['keys', 'a', 'an', 'instanceof', 'lengthof', 'length', 'equal', 'throw', 'include',
   'contain', 'eql', 'above', 'least', 'below', 'most', 'match', 'string',
-  'members', 'property', 'ownproperty', 'ownpropertydescriptor', 'gte', 'lte'];
+  'members', 'property', 'ownproperty', 'ownpropertydescriptor', 'gte', 'lte', 'within'];
 
-const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist', 'empty'];
+const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist', 'empty', 'nan'];
 
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
@@ -48,6 +48,23 @@ module.exports = function transformer(file, api) {
     }
   }
 
+  function withIn(p, rest, args, containsNot) {
+    if (args.length !== 2) {
+      console.warn(`.withIn needs two arguments, you passed ${args.length}`);
+      return p;
+    }
+
+    const containsLength = chainContains('length', p.value.callee, isPrefix);
+    const expect = () => containsLength ? updateExpect(rest, (node) =>
+      j.memberExpression(node, j.identifier('length'))) : rest;
+
+    j(p).closest(j.ExpressionStatement).insertBefore(
+      j.expressionStatement(
+        createCall('toBeLessThanOrEqual', [args[0]], expect(), containsNot)));
+
+    return createCall('toBeGreaterThanOrEqual', [args[1]], expect(), containsNot);
+  }
+
   const shouldToExpect = () =>
     root.find(j.MemberExpression, {
       property: {
@@ -80,6 +97,8 @@ module.exports = function transformer(file, api) {
           return createCall('toBe', [j.booleanLiteral(false)], rest, containsNot);
         case 'null':
           return createCall('toBeNull', [], rest, containsNot);
+        case 'nan':
+          return createCall('toBeNaN', [], rest, containsNot);
         case 'undefined':
           return containsNot ?
             createCall('toBeDefined', [], rest) :
@@ -137,6 +156,8 @@ module.exports = function transformer(file, api) {
         case 'most':
         case 'lte':
           return createCall('toBeLessThanOrEqual', args, rest, containsNot);
+        case 'within':
+          return withIn(p, rest, args, containsNot);
         case 'match':
           return createCall('toMatch', args, rest, containsNot);
         case 'members':
