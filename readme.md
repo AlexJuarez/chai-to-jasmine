@@ -14,7 +14,10 @@ jscodeshift -t ./transforms/chai-to-jasmine <file>
 
 - calls
 ```
-keys, a, an, instanceof, lengthof, length, equal, throw, include, contain, eql, above, least, below, most, match, string, members, property, ownproperty, ownpropertydescriptor, gte, lte,
+keys, a, an, instanceof, lengthof, length, equal, throw,
+include, contain, eql, above, least, below, most, match,
+string, members, property, ownproperty, ownpropertydescriptor,
+gte, lte
 ```
 - members
 ```
