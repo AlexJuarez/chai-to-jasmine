@@ -1,6 +1,6 @@
 const util = require('./util');
 // not implemented respondTo
-// modifications, within, oneOf, change, increase, decrease - statement modification
+// modifications, oneOf, change, increase, decrease - statement modification
 
 const fns = ['keys', 'a', 'an', 'instanceof', 'lengthof', 'length', 'equal', 'throw', 'include',
   'contain', 'eql', 'above', 'least', 'below', 'most', 'match', 'string',
@@ -185,8 +185,8 @@ module.exports = function transformer(file, api) {
             containsNot
           );
         case 'instanceof':
-          return createCall('toBe', [j.booleanLiteral(true)],
-            updateExpect(value, node => j.binaryExpression('instanceof', node, args[0])),
+          return createCall('toEqual', [createCallChain(['jasmine', 'any'], [args[0]])],
+            rest,
             containsNot
           );
         case 'length':

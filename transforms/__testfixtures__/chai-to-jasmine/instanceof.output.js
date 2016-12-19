@@ -1,1 +1,1 @@
-expect(foo instanceof Foo).toBe(true);
+expect(foo).toEqual(jasmine.any(Foo));
