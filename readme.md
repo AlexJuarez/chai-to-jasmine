@@ -14,16 +14,16 @@ jscodeshift -t ./transforms/chai-to-jasmine <file>
 
 - calls
 ```
-keys, a, an, instanceof, lengthOf, equal, throw, include, contain, eql, above, least, below, most, match, string, members
+keys, a, an, instanceof, lengthof, length, equal, throw, include, contain, eql, above, least, below, most, match, string, members, property, ownproperty, ownpropertydescriptor, gte, lte,
 ```
 - members
 ```
-ok, true, false, null, undefined, exist, empty
+ok, true, false, null, undefined, exist, empty, nan
 ```
 
 ## Unsupported Chai Assertions
 ```
-within, oneOf, change, increase, decrease
+oneOf, change, increase, decrease
 ```
 ## Quirks
 
@@ -80,21 +80,23 @@ expect(typeof Symbol()).toBe('symbol');
 
 #### `.exist`
 
-This assertion is converted to a simpler length check which may not
-be the intention
+This assertion does not have a direction translation and many not be correct
+in the new form.
 
 ##### Example Input
 ```javascript
 expect(foo).to.exist;
 expect(bar).to.not.exist;
 expect(baz).to.not.exist;
+expect(input).exist;
 ```
 
 ##### Example Output
 ```javascript
-expect(foo.length).toBeTruthy();
-expect(bar.length).toBeFalsy();
-expect(baz.length).toBeFalsy();
+expect(foo).not.toBeUndefined();
+expect(bar).toBeFalsy();
+expect(baz).toBeFalsy();
+expect(input).not.toBeUndefined();
 ```
 
 #### `.property`
