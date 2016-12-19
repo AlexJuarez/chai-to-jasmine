@@ -6,7 +6,7 @@ const fns = ['keys', 'a', 'an', 'instanceof', 'lengthof', 'length', 'equal', 'th
   'contain', 'eql', 'above', 'least', 'below', 'most', 'match', 'string',
   'members', 'property', 'ownproperty', 'ownpropertydescriptor', 'gte', 'lte', 'within'];
 
-const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist', 'empty', 'nan'];
+const members = ['ok', 'true', 'false', 'null', 'undefined', 'exist', 'empty', 'nan', 'defined'];
 
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
@@ -99,6 +99,8 @@ module.exports = function transformer(file, api) {
           return createCall('toBeNull', [], rest, containsNot);
         case 'nan':
           return createCall('toBeNaN', [], rest, containsNot);
+        case 'defined':
+          return createCall('toBeUndefined', [], rest, !containsNot);
         case 'undefined':
           return containsNot ?
             createCall('toBeDefined', [], rest) :

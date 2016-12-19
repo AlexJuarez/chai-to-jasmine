@@ -244,6 +244,7 @@ describe('SingleSelect', () => {
       let days;
       days = calendar.find('td[data-day]');
       thing = days[0];
+      expect(days.style.alignItems).toEqual(true);
       expect(itemList.props.items).toEqual(ITEMS);
     });
 

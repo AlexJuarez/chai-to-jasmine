@@ -220,6 +220,7 @@ describe('SingleSelect', () => {
       let days;
       days = calendar.find('td[data-day]');
       thing = days.at(0);
+      expect(days.prop('style').alignItems).toEqual(true);
       expect(itemList.prop('items')).toEqual(ITEMS);
     });
 

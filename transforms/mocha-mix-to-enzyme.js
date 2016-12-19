@@ -132,7 +132,8 @@ module.exports = function transformer(file, api) {
     createCallChain([p.value.arguments[0], 'find'], [p.value.arguments[1]]));
 
   function placeAtCalls(p, nodeName) {
-    j(p).closestScope().find(j.MemberExpression, {
+    const scope = j(p).closestScope();
+    scope.find(j.MemberExpression, {
       object: {
         name: name => name === nodeName
       },
@@ -140,6 +141,19 @@ module.exports = function transformer(file, api) {
         type: j.NumericLiteral.name
       }
     }).replaceWith(p1 => createCallChain([p1.value.object, 'at'], [p1.value.property]));
+
+    scope.find(j.Identifier, {
+      name: name => name === nodeName
+    }).forEach((p1) => {
+      j(p1).closest(j.ExpressionStatement).forEach((p2) => {
+        j(p2).find(j.MemberExpression, {
+          property: {
+            name: 'style'
+          }
+        }).replaceWith(p3 =>
+          createCallChain([p3.value.object, 'prop'], [j.stringLiteral('style')]));
+      });
+    });
   }
 
   root.find(j.CallExpression, {
@@ -149,11 +163,12 @@ module.exports = function transformer(file, api) {
       }
     }
   }).forEach((p) => {
-    j(p).closest(j.VariableDeclarator).forEach((p1) => {
+    const select = j(p);
+    select.closest(j.VariableDeclarator).forEach((p1) => {
       placeAtCalls(p1, p1.value.id.name);
     });
 
-    j(p).closest(j.AssignmentExpression).forEach((p1) => {
+    select.closest(j.AssignmentExpression).forEach((p1) => {
       placeAtCalls(p1, p1.value.left.name);
     });
   });
