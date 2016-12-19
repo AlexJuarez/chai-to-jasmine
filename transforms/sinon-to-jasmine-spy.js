@@ -148,6 +148,22 @@ module.exports = function transformer(file, api) {
     }
   });
 
+  root.find(j.MemberExpression, {
+    property: {
+      name: 'args'
+    }
+  }).forEach((p) => {
+    j(p).find(j.CallExpression, {
+      callee: {
+        property: {
+          name: 'getCall'
+        }
+      }
+    }).forEach((p2) => {
+      j(p).replaceWith(createCallChain([p2.value.callee.object, 'calls', 'argsFor'], p2.value.arguments));
+    });
+  });
+
   return root.toSource();
 };
 

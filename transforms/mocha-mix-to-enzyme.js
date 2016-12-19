@@ -131,23 +131,31 @@ module.exports = function transformer(file, api) {
   }).replaceWith(p =>
     createCallChain([p.value.arguments[0], 'find'], [p.value.arguments[1]]));
 
-  root.find(j.VariableDeclarator, {
-    init: {
-      callee: {
-        property: {
-          name: 'find'
-        }
-      }
-    }
-  }).forEach((p) => {
+  function placeAtCalls(p, nodeName) {
     j(p).closestScope().find(j.MemberExpression, {
       object: {
-        name: name => name === p.value.id.name
+        name: name => name === nodeName
       },
       property: {
         type: j.NumericLiteral.name
       }
     }).replaceWith(p1 => createCallChain([p1.value.object, 'at'], [p1.value.property]));
+  }
+
+  root.find(j.CallExpression, {
+    callee: {
+      property: {
+        name: 'find'
+      }
+    }
+  }).forEach((p) => {
+    j(p).closest(j.VariableDeclarator).forEach((p1) => {
+      placeAtCalls(p1, p1.value.id.name);
+    });
+
+    j(p).closest(j.AssignmentExpression).forEach((p1) => {
+      placeAtCalls(p1, p1.value.left.name);
+    });
   });
 
   root.find(j.CallExpression, {
@@ -157,13 +165,42 @@ module.exports = function transformer(file, api) {
   }).replaceWith(p => createCallChain([
     createCallChain([p.value.arguments[0], 'find'], [p.value.arguments[1]]), 'first'], []));
 
-  const createArgs = (node, args) => {
+  const createArgs = (node) => {
     if (node.value.property.name === 'getAttribute') {
       return node.parent.value.arguments;
     }
 
     return [j.stringLiteral(node.value.property.name)];
   };
+
+  function updateFindDOMNode(p, nodeName) {
+    j(p).closestScope().find(j.MemberExpression, {
+      property: {
+        type: j.Identifier.name,
+        name: name => name !== 'textContent'
+      },
+      object: {
+        name: name => name === nodeName
+      }
+    }).forEach((p2) => {
+      const node = createCallChain([
+        createCallChain([
+          createCallChain([
+            p2.value.object,
+            'children'
+          ], []),
+          'first'], []),
+        'attr'
+      ], createArgs(p2));
+
+      if (p2.parent.value.type === j.CallExpression.name &&
+        p2.value.property.name === 'getAttribute') {
+        p2.parent.replace(node);
+      } else {
+        p2.replace(node);
+      }
+    });
+  }
 
   root.find(j.CallExpression, {
     callee: {
@@ -173,32 +210,12 @@ module.exports = function transformer(file, api) {
     // find call instances and update them to .children().first().attr('...')
     j(p).closest(j.VariableDeclarator)
       .forEach((p1) => {
-        j(p1).closestScope().find(j.MemberExpression, {
-          property: {
-            type: j.Identifier.name,
-            name: name => name !== 'textContent'
-          },
-          object: {
-            name: name => name === p1.value.id.name
-          }
-        }).forEach(p2 => {
-          const node = createCallChain([
-            createCallChain([
-              createCallChain([
-                p2.value.object,
-                'children'
-              ], []),
-              'first'], []),
-            'attr'
-          ], createArgs(p2));
+        updateFindDOMNode(p1, p1.value.id.name);
+      });
 
-          if (p2.parent.value.type === j.CallExpression.name &&
-            p2.value.property.name === 'getAttribute') {
-            p2.parent.replace(node);
-          } else {
-            p2.replace(node);
-          }
-        });
+    j(p).closest(j.AssignmentExpression)
+      .forEach((p1) => {
+        updateFindDOMNode(p1, p1.value.left.name);
       });
 
     return createCallChain([p.value.arguments[0], 'render'], []);
@@ -208,7 +225,7 @@ module.exports = function transformer(file, api) {
     callee: {
       name: name => name === 'simulateEvent' || name === 'simulateNativeEvent'
     }
-  }).replaceWith(p =>j.callExpression(
+  }).replaceWith(p => j.callExpression(
     j.memberExpression(p.value.arguments[0], j.identifier('simulate')),
     p.value.arguments.splice(1)
   ));

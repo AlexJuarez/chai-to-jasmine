@@ -211,10 +211,15 @@ describe('SingleSelect', () => {
     });
 
     it('should generate ID', () => {
+      let days = calendar.find('td[data-day]');
+      thing = days.at(0);
       expect(itemList.prop('id')).toBe(`${STANDARD_PROPS.id}-items`);
     });
 
     it('should pass items collection to SelectableItemList descendant', () => {
+      let days;
+      days = calendar.find('td[data-day]');
+      thing = days.at(0);
       expect(itemList.prop('items')).toEqual(ITEMS);
     });
 
