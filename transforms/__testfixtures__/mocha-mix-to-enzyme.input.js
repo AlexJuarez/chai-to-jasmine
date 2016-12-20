@@ -246,6 +246,7 @@ describe('SingleSelect', () => {
       thing = days[0];
       expect(days.style.alignItems).toEqual(true);
       expect(itemList.props.items).toEqual(ITEMS);
+      expect(days.props.style.maxWidth).toEqual('');
     });
 
     it('it should properly pass the selected value', () => {

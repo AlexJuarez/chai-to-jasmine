@@ -92,16 +92,23 @@ module.exports = function transformer(file, api) {
       type: j.MemberExpression.name
     }
   }).replaceWith((p) => {
-    let rest = getAllBefore('have', p.value);
-    const containsNot = chainContains('not', p.value, 'have');
+    const { value } = p;
+    let rest = getAllBefore('have', value);
+    const containsNot = chainContains('not', value, 'have');
     if (chainContains('to', rest)) {
-      rest = getAllBefore('to', p.value);
+      rest = getAllBefore('to', value);
     }
 
     updateWithArgs(rest, p);
 
-    switch (p.value.property.name) {
+    switch (value.property.name) {
       case 'called':
+        if (p.parent.value.type === j.MemberExpression.name
+          && p.parent.value.property.name === 'once') {
+          j(p.parent).replaceWith(
+            createCall('toHaveBeenCalledTimes', [j.numericLiteral(1)], rest, containsNot));
+          return rest;
+        }
         return createCall('toHaveBeenCalled', [], rest, containsNot);
       case 'calledOnce':
         return createCall('toHaveBeenCalledTimes', [j.numericLiteral(1)], rest, containsNot);
@@ -110,7 +117,7 @@ module.exports = function transformer(file, api) {
       case 'calledThrice':
         return createCall('toHaveBeenCalledTimes', [j.numericLiteral(3)], rest, containsNot);
       default:
-        return p;
+        return value;
     }
   });
 
@@ -144,9 +151,15 @@ module.exports = function transformer(file, api) {
         return createCall('toHaveBeenCalledWith',
           p.value.arguments.map(addMatcher), rest, containsNot);
       default:
-        return p;
+        return p.value;
     }
   });
+
+  root.find(j.MemberExpression, {
+    property: {
+      name: 'lastCall'
+    }
+  }).replaceWith(p => createCallChain([p.value.object, 'calls', 'mostRecent'], []));
 
   root.find(j.MemberExpression, {
     property: {

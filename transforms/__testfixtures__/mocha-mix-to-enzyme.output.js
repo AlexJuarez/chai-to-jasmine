@@ -222,6 +222,7 @@ describe('SingleSelect', () => {
       thing = days.at(0);
       expect(days.prop('style').alignItems).toEqual(true);
       expect(itemList.prop('items')).toEqual(ITEMS);
+      expect(days.prop('style').maxWidth).toEqual('');
     });
 
     it('it should properly pass the selected value', () => {

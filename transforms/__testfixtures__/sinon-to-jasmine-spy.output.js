@@ -12,7 +12,10 @@ onChangeSpy.should.toHaveBeenCalledWith(jasmine.stringMatching('test'), 1, jasmi
 
 expect(onChangeSpy).toHaveBeenCalledWith(1);
 
-const { date } = clickSpy.calls.argsFor(0)[0];
+onChangeSpy.should.toHaveBeenCalledTimes(1);
+onChangeSpy.calls.mostRecent().args[0].should.have.property('on', true);
+
+const { date } = onChangeSpy.calls.argsFor(0)[0];
 
 it('should be calledWith', () => {
   onChangeSpy.should.toHaveBeenCalledWith({test: '1'});

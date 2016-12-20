@@ -90,4 +90,46 @@ module.exports = (j, root) => {
   }).filter(p => p.parent.value.type !== j.CallExpression.name &&
     p.parent.value.type !== j.AssignmentExpression.name
   ).replaceWith(p => createCallChain([p.value.object, p.value.property], []));
+
+  function placeAtCalls(p, nodeName) {
+    const scope = j(p).closestScope();
+    scope.find(j.MemberExpression, {
+      object: {
+        name: name => name === nodeName
+      },
+      property: {
+        type: j.NumericLiteral.name
+      }
+    }).replaceWith(p1 => createCallChain([p1.value.object, 'at'], [p1.value.property]));
+
+    scope.find(j.Identifier, {
+      name: name => name === nodeName
+    }).forEach((p1) => {
+      j(p1).closest(j.ExpressionStatement).forEach((p2) => {
+        j(p2).find(j.MemberExpression, {
+          property: {
+            name: 'style'
+          }
+        }).replaceWith(p3 =>
+          createCallChain([p3.value.object, 'prop'], [j.stringLiteral('style')]));
+      });
+    });
+  }
+
+  root.find(j.CallExpression, {
+    callee: {
+      property: {
+        name: 'find'
+      }
+    }
+  }).forEach((p) => {
+    const select = j(p);
+    select.closest(j.VariableDeclarator).forEach((p1) => {
+      placeAtCalls(p1, p1.value.id.name);
+    });
+
+    select.closest(j.AssignmentExpression).forEach((p1) => {
+      placeAtCalls(p1, p1.value.left.name);
+    });
+  });
 };

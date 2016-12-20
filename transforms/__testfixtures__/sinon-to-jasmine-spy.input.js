@@ -12,7 +12,10 @@ onChangeSpy.should.have.been.calledWithMatch('test', 1, /regex/);
 
 expect(onChangeSpy).to.have.been.calledWith(1);
 
-const { date } = clickSpy.getCall(0).args[0];
+onChangeSpy.should.have.been.called.once;
+onChangeSpy.lastCall.args[0].should.have.property('on', true);
+
+const { date } = onChangeSpy.getCall(0).args[0];
 
 it('should be calledWith', () => {
   onChangeSpy.withArgs({test: '1'}).should.have.been.calledOnce;
