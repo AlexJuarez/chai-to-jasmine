@@ -99,14 +99,13 @@ module.exports = function transformer(file, api) {
           return createCall('toBeNull', [], rest, containsNot);
         case 'nan':
           return createCall('toBeNaN', [], rest, containsNot);
-        case 'defined':
-          return createCall('toBeUndefined', [], rest, !containsNot);
         case 'undefined':
           return containsNot ?
             createCall('toBeDefined', [], rest) :
             createCall('toBeUndefined', [], rest);
         case 'empty':
         case 'exist':
+        case 'defined':
           return containsNot ?
             createCall('toBeFalsy', [], rest) :
             createCall('toBeUndefined', [], rest, true);
