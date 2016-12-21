@@ -1,4 +1,5 @@
 const util = require('./util');
+const path = require('path');
 // not implemented respondTo
 // modifications, oneOf, change, increase, decrease - statement modification
 
@@ -130,6 +131,7 @@ module.exports = function transformer(file, api) {
       const rest = getAllBefore(isPrefix, value.callee, 'should');
       const containsNot = chainContains('not', value.callee, isPrefix);
       const containsDeep = chainContains('deep', value.callee, isPrefix);
+      const containsAny = chainContains('any', value.callee, isPrefix);
       const args = value.arguments;
 
       switch (p.value.callee.property.name.toLowerCase()) {
@@ -164,6 +166,10 @@ module.exports = function transformer(file, api) {
         case 'members':
           return createCall('toEqual', args.map(containing), rest, containsNot);
         case 'keys':
+          if (containsAny) {
+            const relativePath = path.relative(process.cwd(), file.path);
+            console.warn(`any.keys is an unsupported keyword, please check ${relativePath}`);
+          }
           return createCall('toEqual',
             [createCallChain(['jasmine', 'arrayContaining'], parseArgs(args))],
             updateExpect(value, (node) => {
@@ -197,6 +203,10 @@ module.exports = function transformer(file, api) {
             containsNot
           );
         case 'property':
+          if (containsDeep) {
+            const relativePath = path.relative(process.cwd(), file.path);
+            console.warn(`deep.property is an unsupported keyword, please check ${relativePath}`);
+          }
           return args.length === 1 ?
             createCall('toBeTruthy', [],
               updateExpect(value, node => j.callExpression(

@@ -96,12 +96,15 @@ expect(input).exist;
 
 ##### Example Output
 ```javascript
-expect(foo).not.toBeUndefined();
+expect(foo).toBeDefined();
 expect(bar).toBeFalsy();
 expect(baz).toBeFalsy();
-expect(input).not.toBeUndefined();
+expect(input).toBeDefined();
 ```
 
 #### `.property`
 
-Does not support deeply nested property checks
+Does not support deeply nested property checks. The following code will not be correctly converted.
+```javascript
+expect(deepObj).to.have.deep.property('green.tea', 'matcha');
+```
