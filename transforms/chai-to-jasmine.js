@@ -55,8 +55,9 @@ module.exports = function transformer(file, api) {
     }
 
     const containsLength = chainContains('length', p.value.callee, isPrefix);
-    const expect = () => containsLength ? updateExpect(rest, (node) =>
-      j.memberExpression(node, j.identifier('length'))) : rest;
+    const expect = () => (containsLength ?
+      updateExpect(rest, node => j.memberExpression(node, j.identifier('length'))) :
+      rest);
 
     j(p).closest(j.ExpressionStatement).insertBefore(
       j.expressionStatement(
@@ -74,7 +75,6 @@ module.exports = function transformer(file, api) {
     })
     .replaceWith(p => j.callExpression(j.identifier('expect'), [p.node.object]))
     .size();
-
 
   const updateMemberExpressions = () =>
     root.find(j.MemberExpression, {
@@ -108,7 +108,7 @@ module.exports = function transformer(file, api) {
         case 'defined':
           return containsNot ?
             createCall('toBeFalsy', [], rest) :
-            createCall('toBeUndefined', [], rest, true);
+            createCall('toBeDefined', [], rest);
         default:
           return value;
       }
