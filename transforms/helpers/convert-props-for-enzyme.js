@@ -2,8 +2,9 @@ const util = require('./../util');
 
 module.exports = (j, root) => {
   const createCallChain = util.createCallChain(j);
+  let mutations = 0;
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     object: {
       object: {
         property: {
@@ -21,9 +22,9 @@ module.exports = (j, root) => {
   .replaceWith(p => j.callExpression(
     j.memberExpression(p.value.object.object.object, j.identifier('childAt')),
     [p.value.property]
-  ));
+  )).size();
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     object: {
       property: {
         name: 'props'
@@ -36,9 +37,9 @@ module.exports = (j, root) => {
   .replaceWith(p => j.callExpression(
     j.memberExpression(p.value.object.object, j.identifier('children')),
     []
-  ));
+  )).size();
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     object: {
       property: {
         name: name => name === 'props' || name === 'state'
@@ -62,16 +63,17 @@ module.exports = (j, root) => {
       default:
         return p.value;
     }
-  });
+  }).size();
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     property: {
       name: 'props'
     }
-  }).replaceWith(p => j.memberExpression(p.value.object,
-    j.callExpression(p.value.property, [])));
+  }).replaceWith(p =>
+    j.memberExpression(p.value.object, j.callExpression(p.value.property, []))
+  ).size();
 
-  root.find(j.CallExpression, {
+  mutations += root.find(j.CallExpression, {
     callee: {
       property: {
         name: 'prop'
@@ -81,28 +83,31 @@ module.exports = (j, root) => {
       type: j.StringLiteral.name,
       value: 'content'
     }]
-  }).replaceWith(p => createCallChain(['mount'], [p.value]));
+  }).replaceWith(p => createCallChain(['mount'], [p.value]))
+    .size();
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     property: {
       name: 'children'
     }
   }).filter(p => p.parent.value.type !== j.CallExpression.name &&
     p.parent.value.type !== j.AssignmentExpression.name
-  ).replaceWith(p => createCallChain([p.value.object, p.value.property], []));
+  ).replaceWith(p => createCallChain([p.value.object, p.value.property], []))
+    .size();
 
   function placeAtCalls(p, nodeName) {
     const scope = j(p).closestScope();
-    scope.find(j.MemberExpression, {
+    mutations += scope.find(j.MemberExpression, {
       object: {
         name: name => name === nodeName
       },
       property: {
         type: j.NumericLiteral.name
       }
-    }).replaceWith(p1 => createCallChain([p1.value.object, 'at'], [p1.value.property]));
+    }).replaceWith(p1 => createCallChain([p1.value.object, 'at'], [p1.value.property]))
+      .size();
 
-    scope.find(j.Identifier, {
+    mutations += scope.find(j.Identifier, {
       name: name => name === nodeName
     }).forEach((p1) => {
       j(p1).closest(j.ExpressionStatement).forEach((p2) => {
@@ -113,10 +118,10 @@ module.exports = (j, root) => {
         }).replaceWith(p3 =>
           createCallChain([p3.value.object, 'prop'], [j.stringLiteral('style')]));
       });
-    });
+    }).size();
   }
 
-  root.find(j.CallExpression, {
+  mutations += root.find(j.CallExpression, {
     callee: {
       property: {
         name: 'find'
@@ -131,5 +136,7 @@ module.exports = (j, root) => {
     select.closest(j.AssignmentExpression).forEach((p1) => {
       placeAtCalls(p1, p1.value.left.name);
     });
-  });
+  }).size();
+
+  return mutations;
 };
