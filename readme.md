@@ -81,27 +81,6 @@ expect(typeof new Float32Array()).toBe('float32array');
 expect(typeof Symbol()).toBe('symbol');
 ```
 
-#### `.exist`
-
-This assertion does not have a direction translation and many not be correct
-in the new form.
-
-##### Example Input
-```javascript
-expect(foo).to.exist;
-expect(bar).to.not.exist;
-expect(baz).to.not.exist;
-expect(input).exist;
-```
-
-##### Example Output
-```javascript
-expect(foo).toBeDefined();
-expect(bar).toBeFalsy();
-expect(baz).toBeFalsy();
-expect(input).toBeDefined();
-```
-
 #### `.property`
 
 Does not support deeply nested property checks. The following code will not be correctly converted.
