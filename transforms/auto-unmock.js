@@ -3,21 +3,21 @@ const IGNORE_INCLUDES = ['react', 'mocha-mix', 'enzyme', 'radium'];
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
   const root = j(file.source);
-
+  let mutations = 0;
   const files = {};
 
   // Find imports
-  root.find(j.ImportDeclaration, {
+  mutations += root.find(j.ImportDeclaration, {
     source: {
       type: j.StringLiteral.name
     }
   })
   .forEach((p) => {
     files[p.value.source.value] = true;
-  });
+  }).size();
 
   // Find require()
-  root.find(j.CallExpression, {
+  mutations += root.find(j.CallExpression, {
     callee: {
       name: 'require'
     },
@@ -27,10 +27,10 @@ module.exports = function transformer(file, api) {
   })
   .forEach((p) => {
     files[p.value.arguments[0].value] = true;
-  });
+  }).size();
 
   // Find unmock
-  root.find(j.CallExpression, {
+  mutations += root.find(j.CallExpression, {
     callee: {
       type: j.MemberExpression.name,
       object: {
@@ -43,7 +43,7 @@ module.exports = function transformer(file, api) {
   })
   .forEach((p) => {
     delete files[p.value.arguments[0].value];
-  });
+  }).size();
 
   const unmock = [];
 
@@ -53,9 +53,11 @@ module.exports = function transformer(file, api) {
       unmock.push(`jest.unmock('${path}');`);
     });
 
-  return `${unmock.join('\n')}
+  const output = (source, statements) => `${statements.join('\n')}
 
-${file.source}`;
+${source}`;
+
+  return mutations ? output(file.source, unmock) : null;
 };
 
 module.exports.parser = 'babylon';
