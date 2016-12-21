@@ -10,6 +10,7 @@ const fns = ['callCount', 'calledWith', 'calledWithExactly', 'calledWithMatch'];
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift;
   const root = j(file.source);
+  let mutations = 0;
 
   const createCall = util.createCall(j);
   const chainContains = util.chainContains(j);
@@ -28,7 +29,7 @@ module.exports = function transformer(file, api) {
     }
   }
 
-  root.find(j.CallExpression, {
+  mutations += root.find(j.CallExpression, {
     callee: {
       type: j.MemberExpression.name,
       object: {
@@ -61,10 +62,10 @@ module.exports = function transformer(file, api) {
         console.warn(`sinon.${p.value.callee.property.name} is unhandled`);
         return p.node;
     }
-  });
+  }).size();
 
   const updateWithArgs = (rest, path) => {
-    j(rest)
+    mutations += j(rest)
       .find(j.CallExpression, {
         callee: {
           property: {
@@ -80,10 +81,10 @@ module.exports = function transformer(file, api) {
           ));
 
         return p1.value.callee.object;
-      });
+      }).size();
   };
 
-  root
+  mutations += root
   .find(j.MemberExpression, {
     property: {
       name: name => properties.indexOf(name) !== -1
@@ -119,9 +120,9 @@ module.exports = function transformer(file, api) {
       default:
         return value;
     }
-  });
+  }).size();
 
-  root
+  mutations += root
   .find(j.CallExpression, {
     callee: {
       type: j.MemberExpression.name,
@@ -153,15 +154,15 @@ module.exports = function transformer(file, api) {
       default:
         return p.value;
     }
-  });
+  }).size();
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     property: {
       name: 'lastCall'
     }
-  }).replaceWith(p => createCallChain([p.value.object, 'calls', 'mostRecent'], []));
+  }).replaceWith(p => createCallChain([p.value.object, 'calls', 'mostRecent'], [])).size();
 
-  root.find(j.MemberExpression, {
+  mutations += root.find(j.MemberExpression, {
     property: {
       name: 'args'
     }
@@ -175,9 +176,9 @@ module.exports = function transformer(file, api) {
     }).forEach((p2) => {
       j(p).replaceWith(createCallChain([p2.value.callee.object, 'calls', 'argsFor'], p2.value.arguments));
     });
-  });
+  }).size();
 
-  return root.toSource();
+  return mutations ? root.toSource() : null;
 };
 
 module.exports.parser = 'babylon';
