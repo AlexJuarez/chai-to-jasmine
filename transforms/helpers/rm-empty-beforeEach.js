@@ -1,5 +1,7 @@
-module.exports = function (j, root) {
-  root.find(j.ExpressionStatement, {
+module.exports = (j, root) => {
+  let mutations = 0;
+
+  mutations += root.find(j.ExpressionStatement, {
     expression: {
       callee: {
         name: 'beforeEach'
@@ -12,5 +14,7 @@ module.exports = function (j, root) {
         }
       }]
     }
-  }).remove();
+  }).remove().size();
+
+  return mutations;
 };
