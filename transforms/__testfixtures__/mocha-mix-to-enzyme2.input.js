@@ -55,6 +55,10 @@ describe('SelectableItem', () => {
     SelectableItem = mix.import();
   });
 
+  beforeEach(() => {
+    SelectableItem = mix.import();
+  });
+
   it('should correctly pass attributes to rendered node', () => {
     const renderedDom = findDOMNode(getRenderedSelectableItem());
     expect(renderedDom.id).toEqual(ID);

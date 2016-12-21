@@ -1,6 +1,7 @@
 const rmReactUtils = require('./helpers/rm-react-utils');
 const convertProps = require('./helpers/convert-props-for-enzyme');
 const wrapInteralCalls = require('./helpers/wrap-internal-calls-for-enzyme');
+const rmEmptyBeforeEach = require('./helpers/rm-empty-beforeEach');
 const util = require('./util');
 
 module.exports = function transformer(file, api) {
@@ -332,6 +333,7 @@ module.exports = function transformer(file, api) {
 
   convertProps(j, root);
   wrapInteralCalls(j, root);
+  rmEmptyBeforeEach(j, root);
 
   return root.toSource({ quote: 'single' });
 };
