@@ -23,16 +23,16 @@ describe('Toast', () => {
   });
 
   it('should render children as content', () => {
-    let rendered = mount(
+    const rendered = mount(
       <Toast />
     );
 
-    let toastContent = rendered.find(CONTENT_SELECTOR).first().text();
+    const toastContent = rendered.find(CONTENT_SELECTOR).first().text();
     expect(toastContent).toEqual(CONTENT);
   });
 
   it('should set expired state to false by default', () => {
-    let rendered = mount(
+    const rendered = mount(
       <Toast />
     );
 
@@ -40,7 +40,7 @@ describe('Toast', () => {
   });
 
   it('should set expired state to true when lifetime duration has passed', () => {
-    let rendered = mount(
+    const rendered = mount(
       <Toast lifetime={LIFETIME} />
     );
 
@@ -49,7 +49,7 @@ describe('Toast', () => {
   });
 
   it('should call onExpire callback when lifetime duration has passed', () => {
-    let expireSpy = jasmine.createSpy();
+    const expireSpy = jasmine.createSpy();
     mount(
     <Toast
     lifetime={LIFETIME}
@@ -62,7 +62,7 @@ describe('Toast', () => {
   });
 
   it('should not render toast when expired state is true', () => {
-    let rendered = mount(
+    const rendered = mount(
       <Toast />
     );
 
@@ -77,8 +77,8 @@ describe('Toast', () => {
     // @TODO: Enable when 0.14 upgrade happens
     // https://github.com/facebook/react/issues/1297
 
-    let expireSpy = jasmine.createSpy();
-    let rendered = mount(
+    const expireSpy = jasmine.createSpy();
+    const rendered = mount(
       <Toast
     lifetime={LIFETIME}
     onExpire={expireSpy}
@@ -95,8 +95,8 @@ describe('Toast', () => {
     // @TODO: Enable when 0.14 upgrade happens
     // https://github.com/facebook/react/issues/1297
 
-    let expireSpy = jasmine.createSpy();
-    let rendered = mount(
+    const expireSpy = jasmine.createSpy();
+    const rendered = mount(
       <Toast
     lifetime={LIFETIME}
     onExpire={expireSpy}
@@ -114,25 +114,25 @@ describe('Toast', () => {
 
   describe('Undo functionality', () => {
     it('should not display undo button without onUndo prop', () => {
-      let rendered = mount(
+      const rendered = mount(
         <Toast />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR);
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR);
       expect(undoButton.isEmpty()).toBe(true);
     });
 
     it('should display undo button when onUndo prop is provided', () => {
-      let rendered = mount(
+      const rendered = mount(
         <Toast onUndo={() => {}} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       expect(undoButton).not.toBeUndefined();
     });
 
     it('should ignore the lifetime expiration after undoing state is set to true', () => {
-      let rendered = mount(
+      const rendered = mount(
         <Toast lifetime={LIFETIME} />
       );
 
@@ -145,24 +145,24 @@ describe('Toast', () => {
     });
 
     it('should call onUndo click handler with correct arguments when undo button is clicked', () => {
-      let undoSpy = jasmine.createSpy();
-      let rendered = mount(
+      const undoSpy = jasmine.createSpy();
+      const rendered = mount(
         <Toast onUndo={undoSpy} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       undoButton.simulate('click');
 
       expect(undoSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should set expired and undoing states when calling onUndo "done" callback', () => {
-      let undoCallback = (obj) => { obj.done(); };
-      let rendered = mount(
+      const undoCallback = (obj) => { obj.done(); };
+      const rendered = mount(
         <Toast onUndo={undoCallback} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       undoButton.simulate('click');
 
       expect(rendered.state('undoing')).toBe(false);
@@ -170,16 +170,16 @@ describe('Toast', () => {
     });
 
     it('should correctly set loading state between onUndo click and "error" callback', () => {
-      let undoCallback = (obj) => {
+      const undoCallback = (obj) => {
         setTimeout(() => {
           obj.error(ERROR_CONTENT);
         }, 5);
       };
-      let rendered = mount(
+      const rendered = mount(
         <Toast onUndo={undoCallback} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       undoButton.simulate('click');
 
       expect(rendered.state('loading')).toBe(true);
@@ -189,16 +189,16 @@ describe('Toast', () => {
     });
 
     it('should correctly display loading indicator to match loading state', () => {
-      let undoCallback = (obj) => {
+      const undoCallback = (obj) => {
         setTimeout(() => {
           obj.error(ERROR_CONTENT);
         }, 5);
       };
-      let rendered = mount(
+      const rendered = mount(
         <Toast onUndo={undoCallback} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       undoButton.simulate('click');
 
       let loadingIndicator = rendered.find(LoadingIndicator);
@@ -210,27 +210,27 @@ describe('Toast', () => {
     });
 
     it('should correctly set state after calling onUndo "error" callback', () => {
-      let undoCallback = (obj) => { obj.error(ERROR_CONTENT); };
-      let rendered = mount(
+      const undoCallback = (obj) => { obj.error(ERROR_CONTENT); };
+      const rendered = mount(
         <Toast onUndo={undoCallback} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       undoButton.simulate('click');
 
       expect(rendered.state('undoing')).toBe(true);
     });
 
     it('should set error message content after calling onUndo "error" callback', () => {
-      let undoCallback = (obj) => { obj.error(ERROR_CONTENT); };
-      let rendered = mount(
+      const undoCallback = (obj) => { obj.error(ERROR_CONTENT); };
+      const rendered = mount(
         <Toast onUndo={undoCallback} />
       );
 
-      let undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
+      const undoButton = rendered.find(UNDO_BUTTON_SELECTOR).first();
       undoButton.simulate('click');
 
-      let toastContent = rendered.find(CONTENT_SELECTOR).first().text();
+      const toastContent = rendered.find(CONTENT_SELECTOR).first().text();
       expect(toastContent).toEqual(ERROR_CONTENT);
     });
   });
