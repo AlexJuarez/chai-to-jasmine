@@ -57,6 +57,10 @@ describe('Toast', () => {
       />
     );
 
+    for (let i = 0; i < 10; i++) {
+      console.log(i);
+    }
+
     jest.runAllTimers();
     expect(expireSpy).toHaveBeenCalledTimes(1);
   });

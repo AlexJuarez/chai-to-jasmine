@@ -4,6 +4,6 @@ module.exports = {
   'parser': 'babel-eslint',
   'rules': {
     'comma-dangle': ['error', 'never'],
-
+    'no-plusplus': 'off'
   }
 };
