@@ -7,7 +7,8 @@
     "test": "jest",
     "test:chai-to-jasmine": "jscodeshift -t ./transforms/chai-to-jasmine.js ./transforms/__testfixtures__/datepicker.input.js -d -p --",
     "test:mocha-mix": "jscodeshift -t ./transforms/mocha-mix-to-enzyme.js ./transforms/__testfixtures__/datepicker.input.js -d -p --",
-    "jest": "jest"
+    "jest": "jest",
+    "lint": "eslint ./transforms"
   },
   "author": "",
   "license": "ISC",

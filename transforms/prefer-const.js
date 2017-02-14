@@ -5,7 +5,7 @@ module.exports = function transformer(file, api) {
   let mutations = 0;
 
   root.find(j.VariableDeclaration, { kind: 'let' })
-    .forEach(p => {
+    .forEach((p) => {
       const scope = j(p).closestScope();
       const isConst = scope.find(j.AssignmentExpression, {
         left: left => p.value.declarations.some(dec => dec.id.name === left.name)
