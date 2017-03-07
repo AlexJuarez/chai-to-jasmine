@@ -26,6 +26,18 @@ module.exports = function transformer(file, api) {
   (node.type === j.CallExpression.name &&
   isExpectCall(node.callee)));
 
+  const typeOf = (value, args, containsNot) => {
+    switch (args[0].value) {
+      case 'null':
+        return createCall('toBeNull', [], updateExpect(value, node => node, containsNot));
+      case 'undefined':
+        return createCall('toBeUndefined', [], updateExpect(value, node => node, containsNot));
+      default:
+        return createCall('toBe', args,
+          updateExpect(value, node => j.unaryExpression('typeof', node)), containsNot);
+    }
+  };
+
   const isPrefix = name => (['to', 'with', 'that'].indexOf(name) !== -1);
 
   function parseArgs(args) {
@@ -184,6 +196,7 @@ module.exports = function transformer(file, api) {
             return value;
           }
           if (args[0].type === j.StringLiteral.name) {
+            return typeOf(value, args, containsNot);
             return createCall('toBe', args,
               updateExpect(value, node => j.unaryExpression('typeof', node)), containsNot);
           }

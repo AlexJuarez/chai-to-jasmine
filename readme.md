@@ -57,24 +57,25 @@ expect(Object.keys({ foo: 1, bar: 2, baz: 3 })).toEqual(jasmine.arrayContaining(
 
 The converted form uses typeof to make the type checking, some of the chai types will not be correctly checked.
 
-##### Example Input
+##### Example
+Correctish output
 ```javascript
+// Input
 expect('test').to.be.a('string');
 expect({ foo: 'bar' }).to.be.an('object');
 expect(null).to.be.a('null');
 expect(undefined).to.be.an('undefined');
+// Correct Output
+expect(typeof 'test').toBe('string');
+expect(typeof { foo: 'bar' }).toBe('object');
+expect(null).toBeNull();
+expect(undefined).toBeUndefined();
+// Input that may not work
 expect(new Error).to.be.an('error');
 expect(new Promise).to.be.a('promise');
 expect(new Float32Array()).to.be.a('float32array');
 expect(Symbol()).to.be.a('symbol');
-```
-
-##### Example Output
-```javascript
-expect(typeof 'test').toBe('string');
-expect(typeof { foo: 'bar' }).toBe('object');
-expect(typeof null).toBe('null');
-expect(typeof undefined).toBe('undefined');
+// Output that may not work
 expect(typeof new Error).toBe('error');
 expect(typeof new Promise).toBe('promise');
 expect(typeof new Float32Array()).toBe('float32array');
