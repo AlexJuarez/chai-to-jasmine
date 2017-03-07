@@ -265,7 +265,7 @@ module.exports = function transformer(file, api) {
   mutations += updateCallExpressions();
   mutations += updateMemberExpressions();
 
-  return mutations ? root.toSource({ quote: 'single' }) : null;
+  return mutations ? root.toSource({ parser: require('babel-eslint'), quote: 'single' }) : null;
 };
 
 module.exports.parser = 'babylon';
