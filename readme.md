@@ -1,5 +1,7 @@
 ## chai-to-jasmine [![Build Status](https://travis-ci.org/AlexJuarez/chai-to-jasmine.svg?branch=master)](https://travis-ci.org/AlexJuarez/chai-to-jasmine)
 
+This repository has been depreciated by a contribution to https://github.com/skovhus/jest-codemods. All future updates and bug fixes will live on in the jest-codemods repository.
+
 A [jscodeshift](https://github.com/facebook/jscodeshift) codemod that transforms test files from [chai](http://chaijs.com/) to [Jasmine](https://jasmine.github.io/edge/introduction).
 
 ## Install & Run
